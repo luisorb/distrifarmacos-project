@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Distrifármacos{% endblock %}
+
+{% block content %}
+<section class="hero mb-4 mb-lg-5">
+  <div class="row align-items-end position-relative">
+    <div class="col-lg-8">
+      <small class="text-uppercase fw-semibold">Panel principal</small>
+      <h1 class="display-5 fw-bold mb-3">Gestión de medicamentos, afiliados y radicaciones</h1>
+      <p class="lead mb-0 text-light-emphasis">
+        Un flujo rápido para administrar catálogos, fórmulas, soportes y tecnologías desde una sola interfaz.
+      </p>
+    </div>
+    <div class="col-lg-4 mt-4 mt-lg-0 text-lg-end position-relative z-1">
+      <a class="btn btn-light me-2 mb-2" href="{% url 'parametricas:lista' %}">Ir a medicamentos</a>
+      <a class="btn btn-outline-light mb-2" href="{% url 'formula:lista' %}">Ver fórmulas</a>
+    </div>
+  </div>
+</section>
+
+<div class="row g-4">
+  <div class="col-md-4">
+    <div class="app-card p-4 h-100">
+      <div class="text-uppercase text-muted small fw-semibold mb-2">Catálogo</div>
+      <h2 class="h4">Medicamentos</h2>
+      <p class="mb-4 text-muted">Carga, edita y consulta el maestro de medicamentos con soporte para modales.</p>
+      <a class="btn btn-brand" href="{% url 'parametricas:lista' %}">Abrir catálogo</a>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="app-card p-4 h-100">
+      <div class="text-uppercase text-muted small fw-semibold mb-2">Afiliación</div>
+      <h2 class="h4">Afiliados</h2>
+      <p class="mb-4 text-muted">Gestiona los pacientes y entra al flujo de radicación desde el mismo módulo.</p>
+      <a class="btn btn-brand" href="{% url 'radicacion:lista' %}">Abrir afiliados</a>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="app-card p-4 h-100">
+      <div class="text-uppercase text-muted small fw-semibold mb-2">Radicación</div>
+      <h2 class="h4">Fórmulas</h2>
+      <p class="mb-4 text-muted">Detalle, tecnologías, soportes y API de búsqueda de medicamentos.</p>
+      <a class="btn btn-brand" href="{% url 'formula:lista' %}">Abrir fórmulas</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

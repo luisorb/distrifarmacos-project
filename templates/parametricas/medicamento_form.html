@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+
+{% block title %}Medicamento | Distrifármacos{% endblock %}
+
+{% block content %}
+{% include "includes/form_card.html" with title="Medicamento" description="Crea o actualiza el catálogo de medicamentos." submit_label="Guardar medicamento" cancel_url=cancel_url %}
+{% endblock %}

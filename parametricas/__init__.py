@@ -1,0 +1,1 @@
+"""Parametricas app package."""

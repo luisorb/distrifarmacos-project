@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Medicamentos | Distrifármacos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h3 mb-1">Medicamentos</h1>
+    <p class="text-muted mb-0">Catálogo activo y buscable del maestro de medicamentos.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-brand" href="{% url 'parametricas:crear' %}">Nuevo medicamento</a>
+    <a class="btn btn-soft" data-modal-url="{% url 'parametricas:crear_modal' %}" href="#">Crear en modal</a>
+  </div>
+</div>
+
+<div class="table-card p-3 p-md-4">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr>
+          <th>CUM</th>
+          <th>Nombre genérico</th>
+          <th>Titular</th>
+          <th>Concentración</th>
+          <th>Estado</th>
+          <th class="text-end">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for medicamento in medicamentos %}
+          <tr>
+            <td>{{ medicamento.cum }}</td>
+            <td>{{ medicamento.nombre_generico }}</td>
+            <td>{{ medicamento.titular_registro }}</td>
+            <td>{{ medicamento.concentracion }}</td>
+            <td>{% if medicamento.activo %}<span class="badge text-bg-success">Activo</span>{% else %}<span class="badge text-bg-secondary">Inactivo</span>{% endif %}</td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-outline-secondary" href="{% url 'parametricas:editar' medicamento.pk %}">Editar</a>
+              <a class="btn btn-sm btn-outline-secondary" data-modal-url="{% url 'parametricas:editar_modal' medicamento.pk %}" href="#">Modal</a>
+              <form class="d-inline" method="post" action="{% url 'parametricas:eliminar' medicamento.pk %}" onsubmit="return confirm('¿Eliminar medicamento?');">
+                {% csrf_token %}
+                <button class="btn btn-sm btn-outline-danger" type="submit">Eliminar</button>
+              </form>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6" class="text-center text-muted py-5">No hay medicamentos cargados.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

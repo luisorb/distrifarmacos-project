@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Fórmulas | Distrifármacos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h3 mb-1">Fórmulas</h1>
+    <p class="text-muted mb-0">Listado de radicaciones con acceso al detalle y a la creación rápida.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-brand" href="{% url 'formula:crear' %}">Nueva fórmula</a>
+    <a class="btn btn-soft" data-modal-url="{% url 'formula:crear_modal' %}" href="#">Crear en modal</a>
+  </div>
+</div>
+
+<div class="table-card p-3 p-md-4">
+  <form class="row g-2 mb-4" method="get">
+    <div class="col-md-9">
+      <input type="search" class="form-control" name="q" value="{{ request.GET.q }}" placeholder="Buscar por código, documento o nombre">
+    </div>
+    <div class="col-md-3 d-grid">
+      <button class="btn btn-brand" type="submit">Buscar</button>
+    </div>
+  </form>
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Afiliado</th>
+          <th>Médico</th>
+          <th>Institución</th>
+          <th>Fecha</th>
+          <th class="text-end">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for formula in formulas %}
+          <tr>
+            <td>{{ formula.codigo_formula }}</td>
+            <td>{{ formula.afiliado }}</td>
+            <td>{{ formula.medico }}</td>
+            <td>{{ formula.institucion }}</td>
+            <td>{{ formula.fecha_formula }}</td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-brand" href="{% url 'formula:detalle' formula.pk %}">Ver detalle</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6" class="text-center text-muted py-5">No hay fórmulas registradas.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Cargar soporte | Distrifármacos{% endblock %}
+
+{% block content %}
+<div class="app-card p-4">
+  <h1 class="h4 mb-1">Cargar soporte para {{ formula.codigo_formula }}</h1>
+  <p class="text-muted mb-4">Adjunta un archivo y asócialo con el tipo de soporte correspondiente.</p>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {{ form.as_p }}
+    <button class="btn btn-brand" type="submit">Cargar soporte</button>
+  </form>
+</div>
+{% endblock %}

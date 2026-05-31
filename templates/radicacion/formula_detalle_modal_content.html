@@ -1,0 +1,95 @@
+<div class="d-grid gap-4">
+  <section class="app-card p-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+      <div>
+        <div class="text-uppercase text-muted small fw-semibold">Fórmula</div>
+        <h2 class="h4 mb-1">{{ formula.codigo_formula }}</h2>
+        <p class="text-muted mb-0">{{ formula.afiliado }} · {{ formula.medico }}</p>
+      </div>
+      <div class="text-end">
+        <div class="badge text-bg-light border">{{ formula.institucion }}</div>
+        <div class="text-muted small mt-2">{{ formula.fecha_formula }}</div>
+      </div>
+    </div>
+    <p class="mb-0">{{ formula.observaciones|default:"Sin observaciones." }}</p>
+  </section>
+
+  <section class="app-card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="h5 mb-0">Tecnologías</h3>
+      <span class="badge text-bg-light border">{{ tecnologias.count }}</span>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Medicamento</th>
+            <th>Cantidad</th>
+            <th>Dosis</th>
+            <th>Contrato</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tecnologia in tecnologias %}
+            <tr>
+              <td>{{ tecnologia.medicamento_nombre }}</td>
+              <td>{{ tecnologia.cantidad_formulada }}</td>
+              <td>{{ tecnologia.dosis }}</td>
+              <td>{{ tecnologia.contrato_asignado }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="text-center text-muted py-4">Aún no hay tecnologías.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="app-card p-4">
+    <h3 class="h5 mb-3">Agregar tecnología</h3>
+    <form method="post" action="{% url 'formula:agregar_tecnologia' formula.pk %}">
+      {% csrf_token %}
+      {{ tecnologia_form.non_field_errors }}
+      {{ tecnologia_form.as_p }}
+      <button class="btn btn-brand" type="submit">Agregar tecnología</button>
+    </form>
+  </section>
+
+  <section class="app-card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="h5 mb-0">Soportes</h3>
+      <span class="badge text-bg-light border">{{ soportes.count }}</span>
+    </div>
+    <div class="table-responsive mb-4">
+      <table class="table table-sm align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Medicamento</th>
+            <th>Versión</th>
+            <th>Archivo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for soporte in soportes %}
+            <tr>
+              <td>{{ soporte.get_tipo_soporte_display }}</td>
+              <td>{{ soporte.medicamento_nombre }}</td>
+              <td>v{{ soporte.version }}</td>
+              <td><a href="{{ soporte.archivo.url }}" target="_blank" rel="noreferrer">Descargar</a></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="text-center text-muted py-4">Aún no hay soportes.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <form method="post" action="{% url 'formula:cargar_soporte' formula.pk %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ soporte_form.non_field_errors }}
+      {{ soporte_form.as_p }}
+      <button class="btn btn-brand" type="submit">Cargar soporte</button>
+    </form>
+  </section>
+</div>

@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Distrifármacos{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --brand: #0f766e;
+      --brand-dark: #134e4a;
+      --accent: #f97316;
+      --bg: #f4f7f8;
+      --surface: #ffffff;
+      --text: #102a2b;
+      --muted: #64748b;
+      --border: #d8e2e8;
+    }
+
+    body {
+      font-family: "IBM Plex Sans", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(15, 118, 110, 0.08), transparent 30%),
+        radial-gradient(circle at top right, rgba(249, 115, 22, 0.08), transparent 26%),
+        linear-gradient(180deg, #f8fbfc 0%, var(--bg) 100%);
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, h4, .brand-title {
+      font-family: "Space Grotesk", sans-serif;
+    }
+
+    .navbar {
+      backdrop-filter: blur(12px);
+      background: rgba(255, 255, 255, 0.8);
+      border-bottom: 1px solid rgba(15, 118, 110, 0.12);
+    }
+
+    .brand-badge {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 0.85rem;
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      box-shadow: 0 12px 30px rgba(15, 118, 110, 0.22);
+    }
+
+    .app-shell {
+      padding-top: 1.5rem;
+      padding-bottom: 3rem;
+    }
+
+    .app-card, .table-card, .login-card {
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(216, 226, 232, 0.85);
+      border-radius: 1.25rem;
+      box-shadow: 0 22px 50px rgba(16, 42, 43, 0.06);
+    }
+
+    .modal-content {
+      border-radius: 0.75rem;
+      border: 0;
+      box-shadow: 0 30px 60px rgba(16, 42, 43, 0.2);
+    }
+
+    .modal-content.delete-confirm-modal {
+      border-radius: 1rem;
+      overflow: hidden;
+      border: 1px solid rgba(248, 113, 113, 0.15);
+      box-shadow: 0 24px 60px rgba(127, 29, 29, 0.16);
+    }
+
+    .delete-confirm-dialog {
+      max-width: 33rem;
+    }
+
+    .modal-content.delete-confirm-modal .modal-body {
+      background:
+        radial-gradient(circle at top left, rgba(239, 68, 68, 0.08), transparent 35%),
+        linear-gradient(180deg, #fff 0%, #fff7f7 100%);
+    }
+
+    .delete-modal-icon {
+      width: 4.5rem;
+      height: 4.5rem;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.16), rgba(220, 38, 38, 0.1));
+      color: #dc2626;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 0 1px rgba(220, 38, 38, 0.12);
+      font-size: 40px;
+    }
+
+    .delete-modal-title {
+      letter-spacing: -0.02em;
+    }
+
+    .delete-modal-actions .btn {
+      min-width: 7.5rem;
+      border-radius: 0.65rem;
+    }
+
+    .modal-body .app-card {
+      border-radius: 0.75rem;
+    }
+
+    .btn-brand {
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      color: white;
+      border: none;
+      box-shadow: 0 12px 24px rgba(15, 118, 110, 0.18);
+    }
+
+    .btn-brand:hover {
+      color: white;
+      opacity: 0.96;
+    }
+
+    .btn-soft {
+      background: rgba(15, 118, 110, 0.08);
+      color: var(--brand-dark);
+      border: 1px solid rgba(15, 118, 110, 0.1);
+    }
+
+    .icon-btn {
+      width: 2.5rem;
+      height: 2.5rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .text-muted { color: var(--muted) !important; }
+
+    .table thead th {
+      border-bottom-color: rgba(15, 118, 110, 0.12);
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .form-control, .form-select {
+      border-radius: 0.9rem;
+      border-color: var(--border);
+      background-color: #fcfefe;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: rgba(15, 118, 110, 0.5);
+      box-shadow: 0 0 0 0.2rem rgba(15, 118, 110, 0.12);
+    }
+
+    .hero {
+      padding: 2rem;
+      border-radius: 1.5rem;
+      background: linear-gradient(135deg, rgba(15, 118, 110, 0.95), rgba(19, 78, 74, 0.95));
+      color: #e8f8f7;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -4rem -5rem auto;
+      width: 14rem;
+      height: 14rem;
+      border-radius: 50%;
+      background: rgba(249, 115, 22, 0.2);
+      filter: blur(10px);
+    }
+
+    .hero small {
+      color: rgba(255, 255, 255, 0.75);
+    }
+
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg sticky-top">
+    <div class="container py-2">
+      <a class="navbar-brand d-flex align-items-center gap-3" href="{% url 'dashboard' %}">
+        <span class="brand-badge">Df</span>
+        <span>
+          <span class="d-block brand-title fw-bold">Distrifármacos</span>
+          <small class="text-muted">Radicación y catálogo</small>
+        </span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav ms-auto gap-lg-1 align-items-lg-center">
+          <li class="nav-item"><a class="nav-link" href="{% url 'parametricas:lista' %}">Medicamentos</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'radicacion:lista' %}">Afiliados</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'formula:lista' %}">Fórmulas</a></li>
+          {% if user.is_authenticated %}
+            <li class="nav-item"><span class="nav-link text-muted">{{ user.get_username }}</span></li>
+            <li class="nav-item"><a class="btn btn-sm btn-soft ms-lg-2" href="{% url 'logout' %}">Salir</a></li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="app-shell">
+    <div class="container">
+      {% if messages %}
+        <div class="mb-4">
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} border-0 shadow-sm" role="alert">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+  <div class="modal fade" id="appModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-body p-4" id="appModalBody">
+          <div class="text-center py-5 text-muted">Abre un formulario para cargar su contenido.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="deleteAffiliateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered delete-confirm-dialog">
+      <div class="modal-content delete-confirm-modal">
+        <div class="modal-body p-4">
+          <div class="text-center mb-3">
+            <div class="delete-modal-icon mb-3">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+            <h2 class="h5 mb-2 delete-modal-title">Eliminar afiliado</h2>
+            <p class="text-muted mb-0" id="deleteAffiliateMessage">Esta acción no se puede deshacer.</p>
+          </div>
+
+          <form method="post" id="deleteAffiliateForm">
+            {% csrf_token %}
+            <div class="d-flex gap-2 justify-content-center delete-modal-actions">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-danger">Eliminar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    async function loadModal(url) {
+      const modalElement = document.getElementById('appModal');
+      const modalBody = document.getElementById('appModalBody');
+      modalBody.innerHTML = '<div class="text-center py-5 text-muted">Cargando...</div>';
+      const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      modalBody.innerHTML = await response.text();
+      bootstrap.Modal.getOrCreateInstance(modalElement).show();
+    }
+
+    document.addEventListener('click', (event) => {
+      const trigger = event.target.closest('[data-modal-url]');
+      if (!trigger) {
+        const deleteTrigger = event.target.closest('[data-delete-url]');
+        if (!deleteTrigger) {
+          return;
+        }
+        const deleteForm = document.getElementById('deleteAffiliateForm');
+        const deleteMessage = document.getElementById('deleteAffiliateMessage');
+        deleteForm.action = deleteTrigger.dataset.deleteUrl;
+        deleteMessage.textContent = `Vas a eliminar a ${deleteTrigger.dataset.deleteName}. Esta acción no se puede deshacer.`;
+        return;
+      }
+      event.preventDefault();
+      loadModal(trigger.dataset.modalUrl);
+    });
+
+    document.addEventListener('submit', async (event) => {
+      const form = event.target.closest('form[data-ajax-form]');
+      if (!form) {
+        return;
+      }
+      event.preventDefault();
+      const response = await fetch(form.action, {
+        method: form.method,
+        body: new FormData(form),
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      });
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        const data = await response.json();
+        if (data.ok) {
+          const modalElement = document.getElementById('appModal');
+          bootstrap.Modal.getOrCreateInstance(modalElement).hide();
+          window.location.href = data.redirect_url || window.location.href;
+          return;
+        }
+      }
+      document.getElementById('appModalBody').innerHTML = await response.text();
+    });
+
+    document.addEventListener('shown.bs.modal', () => {
+      const modalElement = document.getElementById('appModal');
+      bootstrap.Modal.getOrCreateInstance(modalElement, {
+        backdrop: 'static',
+        keyboard: false,
+      });
+    });
+  </script>
+</body>
+</html>
