@@ -13,53 +13,424 @@
   </div>
 </div>
 
-<div class="table-card p-3 p-md-4">
+<div class="table-card p-3 p-md-4" id="afiliadosTableApp">
+  {{ afiliados_data|json_script:"afiliados-data" }}
+
+  <div class="row g-3 align-items-end mb-3">
+    <div class="col-12 col-lg-6">
+      <label class="form-label fw-semibold" for="afiliadosSearch">Buscar</label>
+      <input id="afiliadosSearch" class="form-control" type="search" placeholder="Documento, nombre, apellido o estado">
+    </div>
+    <div class="col-6 col-lg-2">
+      <label class="form-label fw-semibold" for="afiliadosTipoFiltro">Tipo</label>
+      <select id="afiliadosTipoFiltro" class="form-select">
+        <option value="">Todos</option>
+      </select>
+    </div>
+    <div class="col-6 col-lg-2">
+      <label class="form-label fw-semibold" for="afiliadosEstadoFiltro">Estado</label>
+      <select id="afiliadosEstadoFiltro" class="form-select">
+        <option value="">Todos</option>
+        <option value="true">Activo</option>
+        <option value="false">Inactivo</option>
+      </select>
+    </div>
+    <div class="col-12 col-lg-2">
+      <label class="form-label fw-semibold" for="afiliadosPageSize">Filas</label>
+      <select id="afiliadosPageSize" class="form-select">
+        <option value="5">5</option>
+        <option value="10" selected>10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <p class="text-muted mb-0" id="afiliadosTableSummary">Cargando afiliados...</p>
+    <small class="text-muted" data-table-range-info></small>
+  </div>
+
   <div class="table-responsive">
     <table class="table align-middle mb-0">
-      <thead>
+      <thead data-table-head></thead>
+      <tbody data-table-body>
         <tr>
-          <th>Documento</th>
-          <th>Nombres</th>
-          <th>Apellidos</th>
-          <th>Tipo</th>
-          <th>Estado</th>
-          <th class="text-end">Acciones</th>
+          <td colspan="6" class="text-center text-muted py-5">Cargando tabla...</td>
         </tr>
-      </thead>
-      <tbody>
-        {% for afiliado in afiliados %}
-          <tr>
-            <td>{{ afiliado.numero_documento }}</td>
-            <td>{{ afiliado.nombres }}</td>
-            <td>{{ afiliado.apellidos }}</td>
-            <td>{{ afiliado.get_tipo_documento_display }}</td>
-            <td>{% if afiliado.activo %}<span class="badge text-bg-success">Activo</span>{% else %}<span class="badge text-bg-secondary">Inactivo</span>{% endif %}</td>
-            <td class="text-end">
-              <a class="btn btn-sm icon-btn btn-action" data-modal-url="{% url 'radicacion:editar_modal' afiliado.pk %}" href="#" title="Editar afiliado" aria-label="Editar afiliado">
-                <i class="bi bi-pencil"></i>
-              </a>
-              <a class="btn btn-sm icon-btn btn-action" data-modal-url="{% url 'radicacion:radicar' %}?afiliado={{ afiliado.pk }}" href="#" title="Radicar fórmula" aria-label="Radicar fórmula">
-                <i class="bi bi-file-earmark-plus"></i>
-              </a>
-              <button
-                class="btn btn-sm icon-btn btn-action-delete"
-                type="button"
-                data-delete-url="{% url 'radicacion:eliminar' afiliado.pk %}"
-                data-delete-name="{{ afiliado.nombres }} {{ afiliado.apellidos }}"
-                data-bs-toggle="modal"
-                data-bs-target="#deleteAffiliateModal"
-                title="Eliminar afiliado"
-                aria-label="Eliminar afiliado"
-              >
-                <i class="bi bi-trash"></i>
-              </button>
-            </td>
-          </tr>
-        {% empty %}
-          <tr><td colspan="6" class="text-center text-muted py-5">No hay afiliados registrados.</td></tr>
-        {% endfor %}
       </tbody>
     </table>
   </div>
+
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3 pt-3 border-top">
+    <small class="text-muted" data-table-page-info></small>
+    <nav aria-label="Paginación de afiliados">
+      <ul class="pagination pagination-sm mb-0 align-items-center" data-pagination-list></ul>
+    </nav>
+  </div>
 </div>
+
+<style>
+  /* Pagination styles scoped to the afiliados table, using system palette variables from base.html */
+  #afiliadosTableApp .pagination .page-link {
+    color: var(--text);
+    min-width: 34px;
+    padding: .25rem .5rem;
+    border-radius: .375rem;
+    transition: background .12s ease, color .12s ease, transform .06s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #afiliadosTableApp .pagination .page-item.active .page-link {
+    background-color: var(--brand);
+    border-color: var(--brand-dark);
+    color: var(--surface);
+    height: 33px;
+  }
+
+  #afiliadosTableApp .pagination .page-link:hover:not([disabled]) {
+    background-color: var(--brand-dark);
+    color: var(--surface);
+    transform: translateY(-1px);
+  }
+
+  #afiliadosTableApp .pagination .page-item.disabled .page-link,
+  #afiliadosTableApp .pagination .page-link[disabled] {
+    color: var(--muted);
+    opacity: .85;
+  }
+
+  #afiliadosTableApp .page-number {
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  #afiliadosTableApp [data-table-page-info] {
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  /* Make icon buttons slightly larger for clarity */
+  #afiliadosTableApp .page-link .bi {
+    font-size: 1rem;
+  }
+</style>
+
+<script type="module">
+  import {
+    createTable,
+    getCoreRowModel,
+    getFilteredRowModel,
+    getPaginationRowModel,
+    getSortedRowModel,
+    Headers,
+    ColumnPinning,
+    ColumnVisibility,
+    ColumnFiltering,
+    GlobalFiltering,
+    RowSorting,
+    RowPagination,
+  } from 'https://esm.sh/@tanstack/table-core@8.21.3?bundle';
+
+  const root = document.getElementById('afiliadosTableApp');
+  const data = JSON.parse(document.getElementById('afiliados-data').textContent);
+  const searchInput = document.getElementById('afiliadosSearch');
+  const tipoFiltro = document.getElementById('afiliadosTipoFiltro');
+  const estadoFiltro = document.getElementById('afiliadosEstadoFiltro');
+  const pageSizeSelect = document.getElementById('afiliadosPageSize');
+  const tableHead = root.querySelector('[data-table-head]');
+  const tableBody = root.querySelector('[data-table-body]');
+  const summary = document.getElementById('afiliadosTableSummary');
+  const pageInfo = root.querySelector('[data-table-page-info]');
+  const rangeInfo = root.querySelector('[data-table-range-info]');
+  const paginationList = root.querySelector('[data-pagination-list]');
+
+  const state = {
+    sorting: [
+      { id: 'apellidos', desc: false },
+      { id: 'nombres', desc: false },
+    ],
+    columnFilters: [],
+    globalFilter: '',
+    columnPinning: {
+      left: [],
+      right: [],
+    },
+    columnVisibility: {},
+    pagination: {
+      pageIndex: 0,
+      pageSize: Number(pageSizeSelect.value),
+    },
+  };
+
+  const resolveUpdater = (updater, previousValue) => (typeof updater === 'function' ? updater(previousValue) : updater);
+
+  const escapeHtml = (value) => String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+
+  const globalSearchFilter = (row, _columnId, filterValue) => {
+    const term = String(filterValue ?? '').trim().toLowerCase();
+    if (!term) {
+      return true;
+    }
+    const haystack = [
+      row.original.numero_documento,
+      row.original.nombres,
+      row.original.apellidos,
+      row.original.tipo_documento_label,
+      row.original.activo_label,
+    ].join(' ').toLowerCase();
+    return haystack.includes(term);
+  };
+
+  const exactFilter = (row, columnId, filterValue) => {
+    if (filterValue === '' || filterValue === null || filterValue === undefined) {
+      return true;
+    }
+    return String(row.getValue(columnId)) === String(filterValue);
+  };
+
+  const columns = [
+    {
+      accessorKey: 'numero_documento',
+      header: 'Documento',
+      cell: ({ getValue }) => `<span class="fw-semibold">${escapeHtml(getValue())}</span>`,
+    },
+    {
+      accessorKey: 'nombres',
+      header: 'Nombres',
+      cell: ({ getValue }) => escapeHtml(getValue()),
+    },
+    {
+      accessorKey: 'apellidos',
+      header: 'Apellidos',
+      cell: ({ getValue }) => escapeHtml(getValue()),
+    },
+    {
+      accessorKey: 'tipo_documento',
+      header: 'Tipo',
+      cell: ({ row }) => escapeHtml(row.original.tipo_documento_label),
+      filterFn: exactFilter,
+    },
+    {
+      accessorKey: 'activo',
+      header: 'Estado',
+      cell: ({ row }) => `<span class="badge ${escapeHtml(row.original.activo_badge_class)}">${escapeHtml(row.original.activo_label)}</span>`,
+      filterFn: exactFilter,
+    },
+    {
+      id: 'acciones',
+      header: 'Acciones',
+      enableSorting: false,
+      enableColumnFilter: false,
+      cell: ({ row }) => {
+        const afiliado = row.original;
+        return `
+          <div class="d-flex justify-content-end gap-1 flex-wrap">
+            <a class="btn btn-sm icon-btn btn-action" data-modal-url="${escapeHtml(afiliado.edit_url)}" href="#" title="Editar afiliado" aria-label="Editar afiliado">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <a class="btn btn-sm icon-btn btn-action" data-modal-url="${escapeHtml(afiliado.radicar_url)}" href="#" title="Radicar fórmula" aria-label="Radicar fórmula">
+              <i class="bi bi-file-earmark-plus"></i>
+            </a>
+            <button
+              class="btn btn-sm icon-btn btn-action-delete"
+              type="button"
+              data-delete-url="${escapeHtml(afiliado.delete_url)}"
+              data-delete-name="${escapeHtml(afiliado.full_name)}"
+              data-bs-toggle="modal"
+              data-bs-target="#deleteAffiliateModal"
+              title="Eliminar afiliado"
+              aria-label="Eliminar afiliado"
+            >
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        `;
+      },
+    },
+  ];
+
+  const updateTipoOptions = () => {
+    const tipos = [...new Map(data.map((item) => [item.tipo_documento, item.tipo_documento_label])).entries()]
+      .sort((a, b) => a[1].localeCompare(b[1], 'es'));
+    for (const [value, label] of tipos) {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = label;
+      tipoFiltro.append(option);
+    }
+  };
+
+  updateTipoOptions();
+
+  let table = null;
+
+  const renderHeaderCell = (header) => {
+    if (header.isPlaceholder) {
+      return '<th></th>';
+    }
+
+    const column = header.column;
+    const sortState = column.getIsSorted();
+    const sortIcon = sortState === 'asc'
+      ? '<i class="bi bi-sort-up ms-1"></i>'
+      : sortState === 'desc'
+        ? '<i class="bi bi-sort-down ms-1"></i>'
+        : '<i class="bi bi-arrow-down-up ms-1 text-muted"></i>';
+
+    const title = typeof column.columnDef.header === 'string' ? column.columnDef.header : column.id;
+
+    if (!column.getCanSort()) {
+      return `<th>${title}</th>`;
+    }
+
+    return `
+      <th>
+        <button type="button" class="btn btn-link p-0 text-decoration-none text-reset fw-semibold" data-sort-column="${column.id}">
+          ${title}${sortIcon}
+        </button>
+      </th>
+    `;
+  };
+
+  const render = () => {
+    table = createTable({
+      _features: [Headers, ColumnPinning, ColumnVisibility, ColumnFiltering, GlobalFiltering, RowSorting, RowPagination],
+      data,
+      columns,
+      state,
+      getCoreRowModel: getCoreRowModel(),
+      getFilteredRowModel: getFilteredRowModel(),
+      getSortedRowModel: getSortedRowModel(),
+      getPaginationRowModel: getPaginationRowModel(),
+      globalFilterFn: globalSearchFilter,
+      onSortingChange: (updater) => {
+        state.sorting = resolveUpdater(updater, state.sorting);
+        render();
+      },
+      onColumnFiltersChange: (updater) => {
+        state.columnFilters = resolveUpdater(updater, state.columnFilters);
+        state.pagination = {
+          ...state.pagination,
+          pageIndex: 0,
+        };
+        render();
+      },
+      onGlobalFilterChange: (updater) => {
+        state.globalFilter = resolveUpdater(updater, state.globalFilter);
+        state.pagination = {
+          ...state.pagination,
+          pageIndex: 0,
+        };
+        render();
+      },
+      onPaginationChange: (updater) => {
+        state.pagination = resolveUpdater(updater, state.pagination);
+        render();
+      },
+    });
+
+    tableHead.innerHTML = table.getHeaderGroups()
+      .map((headerGroup) => `<tr>${headerGroup.headers.map(renderHeaderCell).join('')}</tr>`)
+      .join('');
+
+    const rows = table.getRowModel().rows;
+    tableBody.innerHTML = rows.length
+      ? rows
+          .map((row) => `<tr>${row.getVisibleCells().map((cell) => {
+            const cellRenderer = cell.column.columnDef.cell;
+            const content = typeof cellRenderer === 'function' ? cellRenderer(cell.getContext()) : escapeHtml(cell.getValue());
+            return `<td>${content}</td>`;
+          }).join('')}</tr>`)
+          .join('')
+      : '<tr><td colspan="6" class="text-center text-muted py-5">No hay afiliados para mostrar con los filtros actuales.</td></tr>';
+
+    const filteredCount = table.getFilteredRowModel().rows.length;
+    const totalCount = data.length;
+    summary.textContent = `${filteredCount} de ${totalCount} afiliados visibles`;
+
+    const pagination = table.getState().pagination;
+    const pageCount = table.getPageCount();
+    const start = filteredCount === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1;
+    const end = Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredCount);
+
+    pageInfo.textContent = `Página ${filteredCount === 0 ? 0 : pagination.pageIndex + 1} de ${pageCount || 0}`;
+    rangeInfo.textContent = filteredCount === 0 ? 'Sin resultados' : `Mostrando ${start}-${end} de ${filteredCount}`;
+
+    const pageButtons = [];
+    const makePageItem = (label, action, disabled = false, active = false, icon = null) => `
+        <li class="page-item ${disabled ? 'disabled' : ''} ${active ? 'active' : ''}">
+          <button class="page-link d-inline-flex align-items-center justify-content-center" type="button" data-page-action="${action}" aria-label="${label}" title="${label}" ${disabled ? 'disabled' : ''} ${active ? 'aria-current="page"' : ''}>
+            ${icon ? `<i class="bi ${icon}"></i>` : `<span class="page-number">${escapeHtml(label)}</span>`}
+          </button>
+        </li>
+    `;
+
+    pageButtons.push(makePageItem('Primera', 'first', !table.getCanPreviousPage(), false, 'bi-skip-start-fill'));
+    pageButtons.push(makePageItem('Anterior', 'prev', !table.getCanPreviousPage(), false, 'bi-chevron-left'));
+
+    // Mostrar solo el número de la página actual entre los controles de navegación
+    const currentPageIndex = pagination.pageIndex || 0;
+    if (pageCount > 0) {
+      pageButtons.push(makePageItem(String(currentPageIndex + 1), String(currentPageIndex), false, true));
+    } else {
+      // si no hay páginas, mostrar 0
+      pageButtons.push(makePageItem('0', '0', true, false));
+    }
+
+    pageButtons.push(makePageItem('Siguiente', 'next', !table.getCanNextPage(), false, 'bi-chevron-right'));
+    pageButtons.push(makePageItem('Última', 'last', !table.getCanNextPage(), false, 'bi-skip-end-fill'));
+    paginationList.innerHTML = pageButtons.join('');
+  };
+
+  root.addEventListener('click', (event) => {
+    const sortButton = event.target.closest('[data-sort-column]');
+    if (sortButton) {
+      event.preventDefault();
+      table.getColumn(sortButton.dataset.sortColumn).toggleSorting(undefined, event.shiftKey);
+      return;
+    }
+
+    const pageAction = event.target.closest('[data-page-action]');
+    if (pageAction) {
+      event.preventDefault();
+      if (pageAction.dataset.pageAction === 'prev') {
+        table.previousPage();
+      } else if (pageAction.dataset.pageAction === 'first') {
+        table.setPageIndex(0);
+      } else if (pageAction.dataset.pageAction === 'last') {
+        table.setPageIndex(Math.max(table.getPageCount() - 1, 0));
+      } else if (/^\d+$/.test(pageAction.dataset.pageAction || '')) {
+        table.setPageIndex(Number(pageAction.dataset.pageAction));
+      } else {
+        table.nextPage();
+      }
+    }
+  });
+
+  searchInput.addEventListener('input', (event) => {
+    table.setGlobalFilter(event.target.value.trim());
+  });
+
+  tipoFiltro.addEventListener('change', (event) => {
+    table.getColumn('tipo_documento').setFilterValue(event.target.value);
+  });
+
+  estadoFiltro.addEventListener('change', (event) => {
+    table.getColumn('activo').setFilterValue(event.target.value);
+  });
+
+  pageSizeSelect.addEventListener('change', (event) => {
+    table.setPageSize(Number(event.target.value));
+  });
+
+  render();
+</script>
 {% endblock %}
