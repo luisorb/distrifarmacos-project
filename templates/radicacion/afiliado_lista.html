@@ -278,6 +278,7 @@
     }
 
     const column = header.column;
+    const thClass = column.id === 'acciones' ? ' class="text-end"' : '';
     const sortState = column.getIsSorted();
     const sortIcon = sortState === 'asc'
       ? '<i class="bi bi-sort-up ms-1"></i>'
@@ -288,11 +289,11 @@
     const title = typeof column.columnDef.header === 'string' ? column.columnDef.header : column.id;
 
     if (!column.getCanSort()) {
-      return `<th>${title}</th>`;
+      return `<th${thClass}>${title}</th>`;
     }
 
     return `
-      <th>
+      <th${thClass}>
         <button type="button" class="btn btn-link p-0 text-decoration-none text-reset fw-semibold" data-sort-column="${column.id}">
           ${title}${sortIcon}
         </button>
