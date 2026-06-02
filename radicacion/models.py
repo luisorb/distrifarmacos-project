@@ -64,7 +64,13 @@ class SoporteFormulaBase(ModeloBase):
     formula_base = models.ForeignKey(FormulaBase, on_delete=models.CASCADE, related_name="soportes")
     archivo = models.FileField(upload_to="soportes/")
     tipo_soporte = models.CharField(max_length=50, choices=TipoSoporte.choices)
-    medicamento = models.ForeignKey(Medicamento, on_delete=models.PROTECT, related_name="soportes")
+    medicamento = models.ForeignKey(
+        Medicamento,
+        on_delete=models.PROTECT,
+        related_name="soportes",
+        null=True,
+        blank=True,
+    )
     medicamento_nombre = models.CharField(max_length=400, blank=True)
     indicaciones = models.TextField(blank=True)
     version = models.PositiveIntegerField(default=1, editable=False)
@@ -97,6 +103,11 @@ class SoporteFormulaBase(ModeloBase):
 
     def __str__(self) -> str:
         return f"{self.formula_base} - {self.tipo_soporte} v{self.version}"
+
+    @property
+    def nombre_archivo(self):
+        """Returns just the filename without the upload path."""
+        return self.archivo.name.split("/")[-1] if self.archivo else ""
 
 
 class FormulaBaseTecnologia(ModeloBase):

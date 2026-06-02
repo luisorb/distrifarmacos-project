@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -103,25 +104,79 @@ def radicar_formula(request):
     afiliado_id = request.GET.get("afiliado") or request.POST.get("afiliado_id_hidden")
     if afiliado_id:
         try:
-                afiliado_obj = Afiliado.objects.get(pk=afiliado_id)
-                initial["afiliado"] = f"{afiliado_obj.nombres} {afiliado_obj.apellidos}"
+            afiliado_obj = Afiliado.objects.get(pk=afiliado_id)
+            initial["afiliado"] = f"{afiliado_obj.nombres} {afiliado_obj.apellidos}"
         except Afiliado.DoesNotExist:
-                afiliado_id = None # Si no existe, reseteamos para evitar errores
-                initial["afiliado"] = ""
-            
+            afiliado_id = None
+            initial["afiliado"] = ""
+
     if request.method == "POST":
         form = FormulaBaseForm(request.POST)
         if form.is_valid():
-            # commit=False nos permite modificar el objeto antes de escribir en la DB
-            formula = form.save(commit=False)
-            
-            # Si tenemos el ID, lo asignamos manualmente a la relación
-            if afiliado_id:
-                formula.afiliado_id = afiliado_id
-                
-            formula.save()
-            messages.success(request, f"Fórmula {formula.codigo_formula} creada.")
+            try:
+                with transaction.atomic():
+                    # 1. Save the base formula
+                    formula = form.save(commit=False)
+                    if afiliado_id:
+                        formula.afiliado_id = afiliado_id
+                    formula.save()
+
+                    # 2. Save medications from the JSON payload
+                    import json
+                    medicamentos_raw = request.POST.get("medicamentos_json", "[]")
+                    try:
+                        medicamentos_lista = json.loads(medicamentos_raw)
+                    except (ValueError, TypeError):
+                        medicamentos_lista = []
+
+                    for item in medicamentos_lista:
+                        try:
+                            med_id = int(item.get("id", 0))
+                            cantidad = int(item.get("cantidad", 0))
+                            if med_id and cantidad > 0:
+                                FormulaBaseTecnologia.objects.create(
+                                    formula=formula,
+                                    medicamento_id=med_id,
+                                    cantidad_formulada=cantidad,
+                                    indicaciones=item.get("info", ""),
+                                )
+                        except (ValueError, TypeError, Medicamento.DoesNotExist):
+                            continue
+
+                    # 3. Save uploaded files as soportes
+                    archivos = request.FILES.getlist("archivos_formula")
+                    for archivo in archivos:
+                        SoporteFormulaBase.objects.create(
+                            formula_base=formula,
+                            archivo=archivo,
+                            tipo_soporte="PRESCRIPCION",
+                            usuario_carga=request.user if request.user.is_authenticated else None,
+                        )
+
+            except Exception as exc:
+                if is_ajax_request(request):
+                    return JsonResponse({"ok": False, "error": str(exc)}, status=500)
+                messages.error(request, f"Error al guardar la fórmula: {exc}")
+                form = FormulaBaseForm(request.POST, initial=initial)
+                template = "radicacion/formula_modal_form.html" if is_ajax_request(request) else "radicacion/formula_form.html"
+                return render(request, template, {"form": form, "desde_afiliados": True, "afiliado_id": afiliado_id})
+
+            if is_ajax_request(request):
+                return JsonResponse({
+                    "ok": True,
+                    "redirect_url": reverse("formula:detalle", kwargs={"pk": formula.pk}),
+                })
+            messages.success(request, f"Formula {formula.codigo_formula} creada.")
             return redirect("formula:detalle", pk=formula.pk)
+        else:
+            # Form invalid
+            if is_ajax_request(request):
+                html = render_to_string(
+                    "radicacion/formula_modal_form.html",
+                    {"form": form, "desde_afiliados": True, "afiliado_id": afiliado_id},
+                    request=request,
+                )
+                return HttpResponse(html, status=422)
     else:
         form = FormulaBaseForm(initial=initial)
 
@@ -129,8 +184,8 @@ def radicar_formula(request):
     return render(request, template, {
         "form": form,
         "desde_afiliados": True,
-        "afiliado_id": afiliado_id
-        })
+        "afiliado_id": afiliado_id,
+    })
 
 
 class FormulaListView(ListView):
@@ -165,15 +220,14 @@ def formula_detalle(request, pk):
         FormulaBase.objects.select_related("afiliado").prefetch_related("tecnologias", "soportes"),
         pk=pk,
     )
+    tecnologias = formula.tecnologias.all()
+    soportes = formula.soportes.all()
     context = {
         "formula": formula,
-        "tecnologias": formula.tecnologias.all(),
-        "soportes": formula.soportes.all(),
-        "tecnologia_form": TecnologiaForm(),
-        "soporte_form": SoporteForm(),
+        "tecnologias": tecnologias,
+        "soportes": soportes,
     }
-    template = "radicacion/formula_detalle_modal_content.html" if is_ajax_request(request) else "radicacion/formula_detalle.html"
-    return render(request, template, context)
+    return render(request, "radicacion/formula_detalle.html", context)
 
 
 @require_POST

@@ -3,12 +3,131 @@
 {% block title %}{{ formula.codigo_formula }} | Distrifármacos{% endblock %}
 
 {% block content %}
-{% include "radicacion/formula_detalle_modal_content.html" %}
-{% endblock %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div>
+    <div class="text-uppercase text-muted small fw-semibold mb-1">Detalle de fórmula</div>
+    <h1 class="h3 mb-0">{{ formula.codigo_formula }}</h1>
+  </div>
+  <a href="{% url 'formula:lista' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Volver al listado
+  </a>
+</div>
 
-{% block extra_js %}
-<script>
-  // Select2 is already initialized by base.html's DOMContentLoaded handler.
-  // No additional setup needed here.
-</script>
+<div class="d-grid gap-4">
+
+  <!-- Datos generales -->
+  <section class="app-card p-4">
+    <h2 class="h6 text-uppercase text-muted fw-semibold mb-3">Datos de la fórmula</h2>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="text-muted small mb-1">Afiliado</div>
+        <div class="fw-medium">{{ formula.afiliado }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="text-muted small mb-1">Médico</div>
+        <div class="fw-medium">{{ formula.medico|default:"—" }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="text-muted small mb-1">Institución</div>
+        <div class="fw-medium">{{ formula.institucion }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="text-muted small mb-1">Fecha de fórmula</div>
+        <div class="fw-medium">{{ formula.fecha_formula }}</div>
+      </div>
+      {% if formula.observaciones %}
+      <div class="col-12">
+        <div class="text-muted small mb-1">Observaciones</div>
+        <div class="fw-medium">{{ formula.observaciones }}</div>
+      </div>
+      {% endif %}
+      <div class="col-md-4">
+        <div class="text-muted small mb-1">Estado</div>
+        {% if formula.activo %}
+          <span class="badge text-bg-success">Activo</span>
+        {% else %}
+          <span class="badge text-bg-secondary">Inactivo</span>
+        {% endif %}
+      </div>
+      <div class="col-md-4">
+        <div class="text-muted small mb-1">Fecha de radicación</div>
+        <div class="fw-medium">{{ formula.fecha_creacion|date:"d/m/Y H:i" }}</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Medicamentos -->
+  <section class="app-card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h6 text-uppercase text-muted fw-semibold mb-0">Medicamentos radicados</h2>
+      <span class="badge text-bg-light border">{{ tecnologias.count }}</span>
+    </div>
+    {% if tecnologias %}
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Medicamento</th>
+            <th style="width: 8rem;">Cantidad</th>
+            <th>Contrato</th>
+            <th>Info. Fórmula Física</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tec in tecnologias %}
+          <tr>
+            <td>{{ tec.medicamento_nombre }}</td>
+            <td>{{ tec.cantidad_formulada }}</td>
+            <td>
+              <span class="badge {% if tec.contrato_asignado == 'CAPITA' %}text-bg-info{% else %}text-bg-warning{% endif %}">
+                {{ tec.contrato_asignado }}
+              </span>
+            </td>
+            <td class="text-muted small">{{ tec.indicaciones|default:"—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-muted mb-0">No se registraron medicamentos en esta radicación.</p>
+    {% endif %}
+  </section>
+
+  <!-- Archivos adjuntos -->
+  <section class="app-card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h6 text-uppercase text-muted fw-semibold mb-0">Archivos adjuntos</h2>
+      <span class="badge text-bg-light border">{{ soportes.count }}</span>
+    </div>
+    {% if soportes %}
+    <div class="row g-3">
+      {% for soporte in soportes %}
+      <div class="col-sm-6 col-md-4 col-lg-3">
+        <a href="{{ soporte.archivo.url }}" target="_blank" rel="noreferrer"
+           class="d-block text-decoration-none soporte-card">
+          {% if soporte.archivo.name|lower|slice:"-4:" == ".pdf" %}
+            <div class="soporte-thumb soporte-thumb-pdf">
+              <i class="bi bi-file-earmark-pdf"></i>
+            </div>
+          {% else %}
+            <div class="soporte-thumb soporte-thumb-img"
+                 style="background-image: url('{{ soporte.archivo.url }}')"></div>
+          {% endif %}
+          <div class="soporte-info mt-2">
+            <div class="small fw-medium text-truncate text-body">{{ soporte.nombre_archivo }}</div>
+            <div class="text-muted" style="font-size: 0.7rem;">
+              {{ soporte.get_tipo_soporte_display }} · v{{ soporte.version }}
+            </div>
+          </div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted mb-0">No se adjuntaron archivos en esta radicación.</p>
+    {% endif %}
+  </section>
+
+</div>
 {% endblock %}

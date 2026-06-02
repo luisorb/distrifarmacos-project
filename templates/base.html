@@ -386,6 +386,39 @@
       text-align: center;
     }
 
+    /* -----------------------------------------------------------------------
+       Formula detail — soporte file cards
+    ----------------------------------------------------------------------- */
+    .soporte-card { cursor: pointer; }
+
+    .soporte-thumb {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      border-radius: 0.6rem;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f9fefe;
+      transition: box-shadow 0.15s;
+    }
+
+    .soporte-card:hover .soporte-thumb {
+      box-shadow: 0 4px 16px rgba(15, 118, 110, 0.15);
+    }
+
+    .soporte-thumb-pdf {
+      background: #fff5f5;
+      font-size: 2.5rem;
+      color: #dc2626;
+    }
+
+    .soporte-thumb-img {
+      background-size: cover;
+      background-position: center;
+    }
+
   </style>
 </head>
 <body>
@@ -707,6 +740,7 @@
           tr.innerHTML =
             '<td>' + escapeHtml(med.label) + '</td>' +
             '<td>' + escapeHtml(med.cantidad) + '</td>' +
+            '<td class="text-muted small">' + escapeHtml(med.info || '—') + '</td>' +
             '<td class="text-center">' +
               '<button type="button" class="btn btn-sm btn-action-delete icon-btn" ' +
                 'data-med-idx="' + idx + '" title="Eliminar">' +
@@ -730,17 +764,20 @@
         var id      = $sel.val();
         var label   = $sel.find('option:selected').text().trim();
         var cantEl  = document.getElementById('id_cantidad');
+        var infoEl  = document.getElementById('id_info_formula_fisica');
         var cantidad = parseInt(cantEl ? cantEl.value : '', 10);
+        var info     = infoEl ? infoEl.value.trim() : '';
 
         if (!id) { alert('Seleccioná un medicamento antes de agregar.'); return; }
         if (!cantidad || cantidad < 1) { alert('Ingresá una cantidad válida.'); return; }
 
-        medicamentos.push({ id: id, label: label, cantidad: cantidad });
+        medicamentos.push({ id: id, label: label, cantidad: cantidad, info: info });
         syncHidden();
         renderTable();
 
         $sel.val(null).trigger('change');
         if (cantEl) cantEl.value = '';
+        if (infoEl) infoEl.value = '';
       });
 
       // Event delegation — delete row
