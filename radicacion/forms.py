@@ -32,6 +32,22 @@ class FormulaBaseForm(forms.ModelForm):
             "observaciones": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
             "activo": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Reemplazamos el ModelChoiceField por un CharField usando el mismo widget ya renderizado
+        # Así evitamos que busque IDs numéricos en el POST
+        widget_afiliado = self.fields['afiliado'].widget
+        self.fields['afiliado'] = forms.CharField(
+            widget=widget_afiliado,
+            required=False
+        )
+    
+    # Evita que el texto del input que contene el nombre del afiliado, intente guardarse en el modelo
+    def clean_afiliado(self):
+        # Ignoramos el string del nombre y retornamos None para que no choque con la ForeignKey
+        return None
 
 
 class TecnologiaForm(forms.ModelForm):

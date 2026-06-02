@@ -100,25 +100,37 @@ def afiliado_eliminar(request, pk):
 
 def radicar_formula(request):
     initial = {}
-    afiliado_id = request.GET.get("afiliado") or request.POST.get("afiliado")
+    afiliado_id = request.GET.get("afiliado") or request.POST.get("afiliado_id_hidden")
     if afiliado_id:
-        initial["afiliado"] = afiliado_id
+        try:
+                afiliado_obj = Afiliado.objects.get(pk=afiliado_id)
+                initial["afiliado"] = f"{afiliado_obj.nombres} {afiliado_obj.apellidos}"
+        except Afiliado.DoesNotExist:
+                afiliado_id = None # Si no existe, reseteamos para evitar errores
+                initial["afiliado"] = ""
+            
     if request.method == "POST":
         form = FormulaBaseForm(request.POST)
         if form.is_valid():
-            formula = form.save()
-            messages.success(request, f"Fórmula {formula.codigo_formula} creada correctamente.")
-            if is_ajax_request(request):
-                return JsonResponse({"ok": True, "redirect_url": reverse_lazy("formula:detalle", kwargs={"pk": formula.pk})})
+            # commit=False nos permite modificar el objeto antes de escribir en la DB
+            formula = form.save(commit=False)
+            
+            # Si tenemos el ID, lo asignamos manualmente a la relación
+            if afiliado_id:
+                formula.afiliado_id = afiliado_id
+                
+            formula.save()
+            messages.success(request, f"Fórmula {formula.codigo_formula} creada.")
             return redirect("formula:detalle", pk=formula.pk)
-        if is_ajax_request(request):
-            html = render_to_string("radicacion/formula_modal_form.html", {"form": form}, request=request)
-            return HttpResponse(html, status=422)
     else:
         form = FormulaBaseForm(initial=initial)
 
     template = "radicacion/formula_modal_form.html" if is_ajax_request(request) else "radicacion/formula_form.html"
-    return render(request, template, {"form": form, "desde_afiliados": True})
+    return render(request, template, {
+        "form": form,
+        "desde_afiliados": True,
+        "afiliado_id": afiliado_id
+        })
 
 
 class FormulaListView(ListView):

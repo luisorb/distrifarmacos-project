@@ -11,6 +11,7 @@
 		<div class="row g-3">
 		<div class="col-md-6">
 			<label class="form-label" for="{{ form.afiliado.id_for_label }}">Afiliado</label>
+			<input type="hidden" name="afiliado_id_hidden" value="{{ afiliado_id|default:'' }}">
 			{{ form.afiliado }}
 			{{ form.afiliado.errors }}
 		</div>
