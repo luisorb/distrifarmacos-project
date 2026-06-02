@@ -18,7 +18,7 @@ class MedicoAdmin(admin.ModelAdmin):
 @admin.register(FormulaBase)
 class FormulaBaseAdmin(admin.ModelAdmin):
     list_display = ("codigo_formula", "afiliado", "medico", "institucion", "fecha_formula", "activo")
-    search_fields = ("codigo_formula", "afiliado__numero_documento", "medico__registro_medico")
+    search_fields = ("codigo_formula", "afiliado__numero_documento", "medico")
 
 
 @admin.register(SoporteFormulaBase)

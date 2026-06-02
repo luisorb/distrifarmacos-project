@@ -54,7 +54,7 @@ class Medico(ModeloBase):
 class FormulaBase(ModeloBase):
     codigo_formula = models.CharField(max_length=20, unique=True, blank=True)
     afiliado = models.ForeignKey(Afiliado, on_delete=models.PROTECT, related_name="formulas")
-    medico = models.ForeignKey(Medico, on_delete=models.PROTECT, related_name="formulas")
+    medico = models.CharField(max_length=255, blank=True)
     institucion = models.CharField(max_length=255)
     fecha_formula = models.DateField()
     observaciones = models.TextField(blank=True)

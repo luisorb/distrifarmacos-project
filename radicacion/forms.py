@@ -2,7 +2,9 @@ from django import forms
 
 from parametricas.models import Medicamento
 
-from .models import Afiliado, FormulaBase, FormulaBaseTecnologia, Medico, SoporteFormulaBase
+from .models import Afiliado, FormulaBase, FormulaBaseTecnologia, SoporteFormulaBase
+
+from django_select2.forms import ModelSelect2Widget
 
 
 class AfiliadoForm(forms.ModelForm):
@@ -19,18 +21,12 @@ class AfiliadoForm(forms.ModelForm):
 
 
 class FormulaBaseForm(forms.ModelForm):
-    medico = forms.ModelChoiceField(
-        queryset=Medico.objects.all(),
-        to_field_name="registro_medico",
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Registro médico o texto"}),
-        required=True,
-    )
-
     class Meta:
         model = FormulaBase
         fields = ["afiliado", "medico", "institucion", "fecha_formula", "observaciones", "activo"]
         widgets = {
-            "afiliado": forms.Select(attrs={"class": "form-select"}),
+            "afiliado": forms.TextInput(attrs={"class": "form-control", "placeholder": "afiliado", "readonly": "readonly"}),
+            "medico": forms.TextInput(attrs={"class": "form-control", "placeholder": "Registro médico"}),
             "institucion": forms.TextInput(attrs={"class": "form-control", "placeholder": "Institución"}),
             "fecha_formula": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
             "observaciones": forms.Textarea(attrs={"class": "form-control", "rows": 4}),

@@ -128,7 +128,7 @@ class FormulaListView(ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        queryset = FormulaBase.objects.select_related("afiliado", "medico")
+        queryset = FormulaBase.objects.select_related("afiliado")
         term = self.request.GET.get("q", "").strip()
         if term:
             queryset = queryset.filter(
@@ -150,7 +150,7 @@ class FormulaCreateView(AjaxModelFormMixin, CreateView):
 
 def formula_detalle(request, pk):
     formula = get_object_or_404(
-        FormulaBase.objects.select_related("afiliado", "medico").prefetch_related("tecnologias", "soportes"),
+        FormulaBase.objects.select_related("afiliado").prefetch_related("tecnologias", "soportes"),
         pk=pk,
     )
     context = {
