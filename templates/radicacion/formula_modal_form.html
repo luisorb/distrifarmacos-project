@@ -4,7 +4,8 @@
 		<p class="text-muted mb-0">Formulario para radicar una fórmula.</p>
 	</div>
 
-	<form method="post" action="{{ action|default:request.path }}" data-ajax-form="true">
+	<form method="post" action="{{ action|default:request.path }}"
+		data-ajax-form="true" id="form-radicar" enctype="multipart/form-data">
 		{% csrf_token %}
 		{{ form.non_field_errors }}
 
@@ -36,6 +37,75 @@
 			<label class="form-label" for="{{ form.observaciones.id_for_label }}">Observaciones</label>
 			{{ form.observaciones }}
 			{{ form.observaciones.errors }}
+		</div>
+
+		{# Medication entry row — all three in one row so align-items-end works #}
+		<div class="col-12">
+			<div class="row g-2 align-items-end">
+				<div class="col">
+					<label class="form-label mb-1" for="id_medicamento_busqueda">Medicamento</label>
+					<select id="id_medicamento_busqueda"
+						class="form-select" data-medicamento-select="true">
+					</select>
+				</div>
+				<div class="col-auto" style="width: 8rem;">
+					<label class="form-label mb-1" for="id_cantidad">Cantidad</label>
+					<input type="number" id="id_cantidad" min="1"
+						class="form-control" placeholder="0">
+				</div>
+				<div class="col-auto">
+					<button type="button" id="btn-agregar-med"
+						class="btn btn-brand px-3" title="Agregar medicamento a la lista">
+						<i class="bi bi-plus-lg"></i> Agregar
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="col-12">
+			<label class="form-label" for="id_info_formula_fisica">Información de la Fórmula Física</label>
+			<textarea id="id_info_formula_fisica" name="info_formula_fisica"
+				class="form-control" rows="3"
+				placeholder="Información adicional de la fórmula física..."></textarea>
+		</div>
+
+		{# Medications table — hidden until at least one row exists #}
+		<div class="col-12" id="tabla-medicamentos-wrapper" style="display:none;">
+			<div class="table-responsive">
+				<table class="table table-sm align-middle mb-0">
+					<thead>
+						<tr>
+							<th>Medicamento</th>
+							<th style="width:8rem;">Cantidad</th>
+							<th style="width:3rem;"></th>
+						</tr>
+					</thead>
+					<tbody id="tabla-medicamentos-body"></tbody>
+				</table>
+			</div>
+		</div>
+
+		{# Serialized payload sent with the form #}
+		<input type="hidden" name="medicamentos_json" id="id_medicamentos_json" value="[]">
+
+		{# File upload — drag & drop, multiple, images + PDF #}
+		<div class="col-12">
+			<label class="form-label">Subir Archivo (Fórmula Médica)</label>
+			<div id="dropzone-formula"
+				class="dropzone-area"
+				role="button"
+				tabindex="0"
+				aria-label="Área para arrastrar y soltar archivos de la fórmula médica">
+				<input type="file" id="id_archivos_formula" name="archivos_formula"
+					accept="image/*,.pdf" multiple
+					class="dropzone-input" aria-hidden="true">
+				<div class="dropzone-prompt" id="dropzone-prompt">
+					<i class="bi bi-cloud-arrow-up fs-2 text-muted"></i>
+					<p class="mb-0 mt-2 fw-medium">Arrastrá archivos acá o hacé clic para seleccionar</p>
+					<p class="text-muted small mb-0">Imágenes o PDF · Múltiples archivos permitidos</p>
+				</div>
+				<div class="dropzone-thumbs" id="dropzone-thumbs" hidden></div>
+			</div>
 		</div>
 
 		<div class="col-12">

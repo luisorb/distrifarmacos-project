@@ -9,6 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
   <style>
     :root {
       --brand: #0f766e;
@@ -192,6 +194,123 @@
       color: rgba(255, 255, 255, 0.75);
     }
 
+    /* -----------------------------------------------------------------------
+       Drag & drop file upload zone
+    ----------------------------------------------------------------------- */
+    .dropzone-area {
+      position: relative;
+      border: 2px dashed var(--border);
+      border-radius: 0.9rem;
+      background: #f9fefe;
+      padding: 1.5rem 1rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      outline: none;
+    }
+
+    .dropzone-area:hover,
+    .dropzone-area:focus,
+    .dropzone-area.drag-over {
+      border-color: var(--brand);
+      background: rgba(15, 118, 110, 0.04);
+    }
+
+    .dropzone-input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 1;
+    }
+
+    /* keep remove buttons above the invisible input */
+    .dz-thumb-remove { z-index: 2; position: relative; }
+
+    .dropzone-prompt { pointer-events: none; }
+
+    .dropzone-thumbs {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+      gap: 0.6rem;
+      margin-top: 1rem;
+      text-align: left;
+    }
+
+    .dz-thumb {
+      position: relative;
+      border: 1px solid var(--border);
+      border-radius: 0.6rem;
+      overflow: hidden;
+      background: #fff;
+      aspect-ratio: 1 / 1;
+    }
+
+    .dz-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .dz-thumb-pdf {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem;
+      padding: 0.5rem;
+      height: 100%;
+      background: #fff5f5;
+    }
+
+    .dz-thumb-pdf i { font-size: 2rem; color: #dc2626; }
+
+    .dz-thumb-name {
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-align: center;
+      word-break: break-all;
+      line-height: 1.2;
+      max-height: 2.4em;
+      overflow: hidden;
+    }
+
+    .dz-thumb-remove {
+      position: absolute;
+      top: 0.25rem;
+      right: 0.25rem;
+      width: 1.4rem;
+      height: 1.4rem;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.55);
+      color: #fff;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .dz-thumb:hover .dz-thumb-remove { opacity: 1; }
+
+    .dz-thumb-size {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 0.15rem 0.35rem;
+      background: rgba(0,0,0,0.45);
+      color: #fff;
+      font-size: 0.6rem;
+      text-align: center;
+    }
+
   </style>
 </head>
 <body>
@@ -270,14 +389,68 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script>
+    // ---------------------------------------------------------------------------
+    // Select2 — medication search
+    // Initializes every <select data-medicamento-select> found in the given root.
+    // Call this after dynamic content is injected (modal loads, etc.).
+    // ---------------------------------------------------------------------------
+    function initMedicamentoSelect(root) {
+      $(root).find('select[data-medicamento-select]').each(function () {
+        if ($(this).hasClass('select2-hidden-accessible')) return; // already init'd
+        // Mount the dropdown inside the closest modal (if any) so Bootstrap's
+        // focus trap doesn't steal focus from the Select2 search input.
+        var $modal = $(this).closest('.modal');
+        var dropdownParent = $modal.length ? $modal : $(document.body);
+        $(this).select2({
+          theme: 'bootstrap-5',
+          placeholder: 'Buscar medicamento...',
+          allowClear: true,
+          minimumInputLength: 2,
+          dropdownParent: dropdownParent,
+          language: {
+            inputTooShort: function () { return 'Escribí al menos 2 caracteres para buscar'; },
+            searching: function () { return 'Buscando...'; },
+            noResults: function () { return 'No se encontraron resultados'; },
+            loadingMore: function () { return 'Cargando más resultados...'; },
+          },
+          ajax: {
+            url: '/formula/api/medicamentos/',
+            dataType: 'json',
+            delay: 300,
+            data: function (params) {
+              return { q: params.term };
+            },
+            processResults: function (data) {
+              return { results: data.results };
+            },
+            cache: true,
+          },
+        });
+      });
+    }
+
+    // Run on initial page load
+    document.addEventListener('DOMContentLoaded', function () {
+      initMedicamentoSelect(document.body);
+    });
+
     async function loadModal(url) {
       const modalElement = document.getElementById('appModal');
       const modalBody = document.getElementById('appModalBody');
       modalBody.innerHTML = '<div class="text-center py-5 text-muted">Cargando...</div>';
       const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       modalBody.innerHTML = await response.text();
-      bootstrap.Modal.getOrCreateInstance(modalElement).show();
+      const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+      // Initialize Select2 after the modal is fully visible so dropdownParent
+      // resolves correctly and Bootstrap's focus trap is already active.
+      modalElement.addEventListener('shown.bs.modal', function onShown() {
+        modalElement.removeEventListener('shown.bs.modal', onShown);
+        initMedicamentoSelect(modalBody);
+      });
+      modal.show();
     }
 
     document.addEventListener('click', (event) => {
@@ -318,7 +491,10 @@
           return;
         }
       }
-      document.getElementById('appModalBody').innerHTML = await response.text();
+      const modalBody = document.getElementById('appModalBody');
+      modalBody.innerHTML = await response.text();
+      // Re-initialize Select2 after form error re-render
+      initMedicamentoSelect(modalBody);
     });
 
     document.addEventListener('shown.bs.modal', () => {
@@ -328,6 +504,258 @@
         keyboard: false,
       });
     });
+
+    // ---------------------------------------------------------------------------
+    // Radicar fórmula — medication list logic
+    // Uses event delegation on #appModalBody so it works after innerHTML injection.
+    // ---------------------------------------------------------------------------
+    (function () {
+      var medicamentos = [];
+
+      function getBody() { return document.getElementById('appModalBody'); }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function syncHidden() {
+        var el = document.getElementById('id_medicamentos_json');
+        if (el) el.value = JSON.stringify(medicamentos);
+      }
+
+      function renderTable() {
+        var wrapper = document.getElementById('tabla-medicamentos-wrapper');
+        var tbody   = document.getElementById('tabla-medicamentos-body');
+        if (!wrapper || !tbody) return;
+
+        tbody.innerHTML = '';
+        if (medicamentos.length === 0) {
+          wrapper.style.display = 'none';
+          return;
+        }
+
+        wrapper.style.display = '';
+        medicamentos.forEach(function (med, idx) {
+          var tr = document.createElement('tr');
+          tr.innerHTML =
+            '<td>' + escapeHtml(med.label) + '</td>' +
+            '<td>' + escapeHtml(med.cantidad) + '</td>' +
+            '<td class="text-center">' +
+              '<button type="button" class="btn btn-sm btn-action-delete icon-btn" ' +
+                'data-med-idx="' + idx + '" title="Eliminar">' +
+                '<i class="bi bi-trash"></i>' +
+              '</button>' +
+            '</td>';
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Reset state when the modal is opened fresh
+      document.getElementById('appModal').addEventListener('show.bs.modal', function () {
+        medicamentos = [];
+      });
+
+      // Event delegation — add button
+      document.addEventListener('click', function (e) {
+        if (!e.target.closest('#btn-agregar-med')) return;
+
+        var $sel    = $('#id_medicamento_busqueda');
+        var id      = $sel.val();
+        var label   = $sel.find('option:selected').text().trim();
+        var cantEl  = document.getElementById('id_cantidad');
+        var cantidad = parseInt(cantEl ? cantEl.value : '', 10);
+
+        if (!id) { alert('Seleccioná un medicamento antes de agregar.'); return; }
+        if (!cantidad || cantidad < 1) { alert('Ingresá una cantidad válida.'); return; }
+
+        medicamentos.push({ id: id, label: label, cantidad: cantidad });
+        syncHidden();
+        renderTable();
+
+        $sel.val(null).trigger('change');
+        if (cantEl) cantEl.value = '';
+      });
+
+      // Event delegation — delete row
+      document.addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-med-idx]');
+        if (!btn) return;
+        var idx = parseInt(btn.dataset.medIdx, 10);
+        medicamentos.splice(idx, 1);
+        syncHidden();
+        renderTable();
+      });
+    })();
+    // ---------------------------------------------------------------------------
+    // Drag & drop file upload zone (#dropzone-formula)
+    // Uses event delegation — works after innerHTML injection via loadModal.
+    // Maintains a DataTransfer-backed FileList and keeps the real <input> in sync.
+    // ---------------------------------------------------------------------------
+    (function () {
+      var dt = new DataTransfer();
+
+      function getInput()   { return document.getElementById('id_archivos_formula'); }
+      function getThumbs()  { return document.getElementById('dropzone-thumbs'); }
+      function getPrompt()  { return document.getElementById('dropzone-prompt'); }
+
+      function isValidFile(file) {
+        return file.type.startsWith('image/') || file.type === 'application/pdf';
+      }
+
+      function isDuplicate(file) {
+        for (var i = 0; i < dt.files.length; i++) {
+          if (dt.files[i].name === file.name && dt.files[i].size === file.size) return true;
+        }
+        return false;
+      }
+
+      function formatSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+      }
+
+      function escHtml(str) {
+        return String(str)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      function syncInput() {
+        var inp = getInput();
+        if (!inp) return;
+        var fresh = new DataTransfer();
+        for (var i = 0; i < dt.files.length; i++) fresh.items.add(dt.files[i]);
+        inp.files = fresh.files;
+      }
+
+      function buildThumb(idx, file) {
+        var div = document.createElement('div');
+        div.className = 'dz-thumb';
+        div.dataset.dzIdx = idx;
+
+        var removeBtn =
+          '<button type="button" class="dz-thumb-remove" data-dz-remove="' + idx + '" ' +
+            'title="Quitar" aria-label="Quitar ' + escHtml(file.name) + '">' +
+            '<i class="bi bi-x-lg"></i>' +
+          '</button>';
+
+        var sizeTag = '<div class="dz-thumb-size">' + escHtml(formatSize(file.size)) + '</div>';
+
+        if (file.type === 'application/pdf') {
+          div.innerHTML =
+            '<div class="dz-thumb-pdf">' +
+              '<i class="bi bi-file-earmark-pdf"></i>' +
+              '<div class="dz-thumb-name">' + escHtml(file.name) + '</div>' +
+            '</div>' +
+            sizeTag + removeBtn;
+        } else {
+          // Image — generate object URL for thumbnail
+          var url = URL.createObjectURL(file);
+          div.innerHTML =
+            '<img src="' + url + '" alt="' + escHtml(file.name) + '" ' +
+              'onload="URL.revokeObjectURL(this.src)">' +
+            sizeTag + removeBtn;
+        }
+        return div;
+      }
+
+      function renderThumbs() {
+        var container = getThumbs();
+        var prompt    = getPrompt();
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        if (dt.files.length === 0) {
+          container.hidden = true;
+          if (prompt) prompt.hidden = false;
+          return;
+        }
+
+        container.hidden = false;
+        if (prompt) prompt.hidden = false; // keep the hint visible
+
+        for (var i = 0; i < dt.files.length; i++) {
+          container.appendChild(buildThumb(i, dt.files[i]));
+        }
+      }
+
+      function addFiles(fileList) {
+        var added = 0;
+        for (var i = 0; i < fileList.length; i++) {
+          var f = fileList[i];
+          if (!isValidFile(f)) { alert('Solo se permiten imágenes o PDF. Se ignoró: ' + f.name); continue; }
+          if (isDuplicate(f))  { continue; }
+          dt.items.add(f);
+          added++;
+        }
+        if (added > 0) { syncInput(); renderThumbs(); }
+      }
+
+      function removeFile(idx) {
+        var fresh = new DataTransfer();
+        for (var i = 0; i < dt.files.length; i++) {
+          if (i !== idx) fresh.items.add(dt.files[i]);
+        }
+        dt = fresh;
+        syncInput();
+        renderThumbs();
+      }
+
+      // Reset on modal open
+      document.getElementById('appModal').addEventListener('show.bs.modal', function () {
+        dt = new DataTransfer();
+        var c = getThumbs();
+        if (c) { c.innerHTML = ''; c.hidden = true; }
+      });
+
+      // Drag feedback
+      document.addEventListener('dragover', function (e) {
+        if (e.target.closest('#dropzone-formula')) { e.preventDefault(); e.target.closest('#dropzone-formula').classList.add('drag-over'); }
+      });
+      document.addEventListener('dragleave', function (e) {
+        var zone = e.target.closest('#dropzone-formula');
+        if (zone && !zone.contains(e.relatedTarget)) zone.classList.remove('drag-over');
+      });
+      document.addEventListener('drop', function (e) {
+        var zone = e.target.closest('#dropzone-formula');
+        if (!zone) return;
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        addFiles(e.dataTransfer.files);
+      });
+
+      // Click-to-browse via native input (absolutely positioned on top of zone)
+      document.addEventListener('change', function (e) {
+        if (!e.target.matches('#id_archivos_formula')) return;
+        addFiles(e.target.files);
+        e.target.value = '';
+      });
+
+      // Remove thumb
+      document.addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-dz-remove]');
+        if (!btn) return;
+        e.stopPropagation();
+        removeFile(parseInt(btn.dataset.dzRemove, 10));
+      });
+
+      // Keyboard open picker
+      document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        var zone = e.target.closest('#dropzone-formula');
+        if (!zone) return;
+        e.preventDefault();
+        var inp = getInput();
+        if (inp) inp.click();
+      });
+    })();
   </script>
+  {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -4,8 +4,6 @@ from parametricas.models import Medicamento
 
 from .models import Afiliado, FormulaBase, FormulaBaseTecnologia, SoporteFormulaBase
 
-from django_select2.forms import ModelSelect2Widget
-
 
 class AfiliadoForm(forms.ModelForm):
     class Meta:
@@ -53,7 +51,11 @@ class FormulaBaseForm(forms.ModelForm):
 class TecnologiaForm(forms.ModelForm):
     medicamento = forms.ModelChoiceField(
         queryset=Medicamento.objects.none(),
-        widget=forms.Select(attrs={"class": "form-select medicamento-select"}),
+        widget=forms.Select(attrs={
+            "class": "form-select",
+            "data-medicamento-select": "true",
+        }),
+        empty_label="Buscar medicamento...",
     )
 
     class Meta:
@@ -67,15 +69,21 @@ class TecnologiaForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["medicamento"].queryset = Medicamento.objects.filter(activo=True).order_by(
-            "nombre_generico", "cum"
-        )
+        # Only pre-load the selected instance to avoid sending thousands of options
+        if self.instance and self.instance.pk and self.instance.medicamento_id:
+            self.fields["medicamento"].queryset = Medicamento.objects.filter(pk=self.instance.medicamento_id)
+        else:
+            self.fields["medicamento"].queryset = Medicamento.objects.none()
 
 
 class SoporteForm(forms.ModelForm):
     medicamento = forms.ModelChoiceField(
         queryset=Medicamento.objects.none(),
-        widget=forms.Select(attrs={"class": "form-select medicamento-select"}),
+        widget=forms.Select(attrs={
+            "class": "form-select",
+            "data-medicamento-select": "true",
+        }),
+        empty_label="Buscar medicamento...",
     )
 
     class Meta:
@@ -89,6 +97,8 @@ class SoporteForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["medicamento"].queryset = Medicamento.objects.filter(activo=True).order_by(
-            "nombre_generico", "cum"
-        )
+        # Only pre-load the selected instance to avoid sending thousands of options
+        if self.instance and self.instance.pk and self.instance.medicamento_id:
+            self.fields["medicamento"].queryset = Medicamento.objects.filter(pk=self.instance.medicamento_id)
+        else:
+            self.fields["medicamento"].queryset = Medicamento.objects.none()
