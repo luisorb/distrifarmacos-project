@@ -26,10 +26,10 @@ class FormulaBaseForm(forms.ModelForm):
         fields = ["afiliado", "medico", "institucion", "fecha_formula", "observaciones", "activo"]
         widgets = {
             "afiliado": forms.TextInput(attrs={"class": "form-control", "placeholder": "afiliado", "readonly": "readonly"}),
-            "medico": forms.TextInput(attrs={"class": "form-control", "placeholder": "Registro médico"}),
-            "institucion": forms.TextInput(attrs={"class": "form-control", "placeholder": "Institución"}),
+            "medico": forms.TextInput(attrs={"class": "form-control", "placeholder": "Nombre del médico que formula"}),
+            "institucion": forms.TextInput(attrs={"class": "form-control", "placeholder": "Institución a la que se dirige la fórmula"}),
             "fecha_formula": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
-            "observaciones": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
+            "observaciones": forms.Textarea(attrs={"class": "form-control", "rows": 4, "placeholder": "Observaciones adicionales sobre la fórmula"}),
             "activo": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
         
