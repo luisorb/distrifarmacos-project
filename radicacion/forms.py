@@ -27,7 +27,7 @@ class FormulaBaseForm(forms.ModelForm):
             "medico": forms.TextInput(attrs={"class": "form-control", "placeholder": "Nombre del médico que formula"}),
             "institucion": forms.TextInput(attrs={"class": "form-control", "placeholder": "Institución a la que se dirige la fórmula"}),
             "fecha_formula": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
-            "observaciones": forms.Textarea(attrs={"class": "form-control", "rows": 4, "placeholder": "Observaciones adicionales sobre la fórmula"}),
+            "observaciones": forms.Textarea(attrs={"class": "form-control", "rows": 3, "style": "resize:none;", "placeholder": "Observaciones adicionales sobre la fórmula"}),
             "activo": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
         

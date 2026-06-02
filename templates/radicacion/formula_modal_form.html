@@ -1,125 +1,158 @@
 <div class="app-card p-4">
+
 	<div class="mb-4">
-		<h1 class="h4 mb-1">Radicar fórmula</h1>
-		<p class="text-muted mb-0">Formulario para radicar una fórmula.</p>
+		<h1 class="h4">Radicar fórmula</h1>
+		<div class="wizard-stepper mb-3" aria-label="Pasos del formulario">
+			<div class="wizard-step active" data-step="1">
+				<div class="wizard-step-dot">1</div>
+				<span class="wizard-step-label">Datos</span>
+			</div>
+			<div class="wizard-step-line"></div>
+			<div class="wizard-step" data-step="2">
+				<div class="wizard-step-dot">2</div>
+				<span class="wizard-step-label">Medicamentos</span>
+			</div>
+			<div class="wizard-step-line"></div>
+			<div class="wizard-step" data-step="3">
+				<div class="wizard-step-dot">3</div>
+				<span class="wizard-step-label">Archivos</span>
+			</div>
+		</div>
+		<h1 class="h5 wizard-title" style="margin-top: -5px;">Datos de la fórmula</h1>
 	</div>
 
 	<form method="post" action="{{ action|default:request.path }}"
-		data-ajax-form="true" id="form-radicar" enctype="multipart/form-data">
+		data-ajax-form="true" id="form-radicar" enctype="multipart/form-data"
+		novalidate>
 		{% csrf_token %}
 		{{ form.non_field_errors }}
-
-		<div class="row g-3">
-		<div class="col-md-6">
-			<label class="form-label" for="{{ form.afiliado.id_for_label }}">Afiliado</label>
-			<input type="hidden" name="afiliado_id_hidden" value="{{ afiliado_id|default:'' }}">
-			{{ form.afiliado }}
-			{{ form.afiliado.errors }}
-		</div>
-		<div class="col-md-6">
-			<label class="form-label" for="{{ form.medico.id_for_label }}">Médico</label>
-			{{ form.medico }}
-			{{ form.medico.errors }}
-		</div>
-
-		<div class="col-md-6">
-			<label class="form-label" for="{{ form.institucion.id_for_label }}">Institución</label>
-			{{ form.institucion }}
-			{{ form.institucion.errors }}
-		</div>
-		<div class="col-md-6">
-			<label class="form-label" for="{{ form.fecha_formula.id_for_label }}">Fecha fórmula</label>
-			{{ form.fecha_formula }}
-			{{ form.fecha_formula.errors }}
-		</div>
-
-		<div class="col-12">
-			<label class="form-label" for="{{ form.observaciones.id_for_label }}">Observaciones</label>
-			{{ form.observaciones }}
-			{{ form.observaciones.errors }}
-		</div>
-
-		{# Medication entry row — all three in one row so align-items-end works #}
-		<div class="col-12">
-			<div class="row g-2 align-items-end">
-				<div class="col">
-					<label class="form-label mb-1" for="id_medicamento_busqueda">Medicamento</label>
-					<select id="id_medicamento_busqueda"
-						class="form-select" data-medicamento-select="true">
-					</select>
-				</div>
-				<div class="col-auto" style="width: 8rem;">
-					<label class="form-label mb-1" for="id_cantidad">Cantidad</label>
-					<input type="number" id="id_cantidad" min="1"
-						class="form-control" placeholder="0">
-				</div>
-				<div class="col-auto">
-					<button type="button" id="btn-agregar-med"
-						class="btn btn-brand px-3" title="Agregar medicamento a la lista">
-						<i class="bi bi-plus-lg"></i> Agregar
-					</button>
-				</div>
-			</div>
-		</div>
-
-		<div class="col-12">
-			<label class="form-label" for="id_info_formula_fisica">Información de la Fórmula Física</label>
-			<textarea id="id_info_formula_fisica" name="info_formula_fisica"
-				class="form-control" rows="3"
-				placeholder="Información adicional de la fórmula física..."></textarea>
-		</div>
-
-		{# Medications table — hidden until at least one row exists #}
-		<div class="col-12" id="tabla-medicamentos-wrapper" style="display:none;">
-			<div class="table-responsive">
-				<table class="table table-sm align-middle mb-0">
-					<thead>
-						<tr>
-							<th>Medicamento</th>
-							<th style="width:8rem;">Cantidad</th>
-							<th style="width:3rem;"></th>
-						</tr>
-					</thead>
-					<tbody id="tabla-medicamentos-body"></tbody>
-				</table>
-			</div>
-		</div>
-
-		{# Serialized payload sent with the form #}
+		<input type="hidden" name="afiliado_id_hidden" value="{{ afiliado_id|default:'' }}">
 		<input type="hidden" name="medicamentos_json" id="id_medicamentos_json" value="[]">
 
-		{# File upload — drag & drop, multiple, images + PDF #}
-		<div class="col-12">
-			<label class="form-label">Subir Archivo (Fórmula Médica)</label>
-			<div id="dropzone-formula"
-				class="dropzone-area"
-				role="button"
-				tabindex="0"
-				aria-label="Área para arrastrar y soltar archivos de la fórmula médica">
-				<input type="file" id="id_archivos_formula" name="archivos_formula"
-					accept="image/*,.pdf" multiple
-					class="dropzone-input" aria-hidden="true">
-				<div class="dropzone-prompt" id="dropzone-prompt">
-					<i class="bi bi-cloud-arrow-up fs-2 text-muted"></i>
-					<p class="mb-0 mt-2 fw-medium">Arrastrá archivos acá o hacé clic para seleccionar</p>
-					<p class="text-muted small mb-0">Imágenes o PDF · Múltiples archivos permitidos</p>
+		<div class="wizard-panel" data-panel="1">
+			<div class="row g-3">
+				<div class="col-md-6">
+					<label class="form-label" for="{{ form.afiliado.id_for_label }}">Afiliado</label>
+					{{ form.afiliado }}
+					{{ form.afiliado.errors }}
 				</div>
-				<div class="dropzone-thumbs" id="dropzone-thumbs" hidden></div>
+				<div class="col-md-6">
+					<label class="form-label" for="{{ form.medico.id_for_label }}">Médico</label>
+					{{ form.medico }}
+					{{ form.medico.errors }}
+				</div>
+				<div class="col-md-6">
+					<label class="form-label" for="{{ form.institucion.id_for_label }}">Institución</label>
+					{{ form.institucion }}
+					{{ form.institucion.errors }}
+				</div>
+				<div class="col-md-6">
+					<label class="form-label" for="{{ form.fecha_formula.id_for_label }}">Fecha fórmula</label>
+					{{ form.fecha_formula }}
+					{{ form.fecha_formula.errors }}
+				</div>
+				<div class="col-12">
+					<label class="form-label" for="{{ form.observaciones.id_for_label }}">Observaciones</label>
+					{{ form.observaciones }}
+					{{ form.observaciones.errors }}
+				</div>
+				<div class="col-12">
+					<div class="form-check">
+						{{ form.activo }}
+						<label class="form-check-label" for="{{ form.activo.id_for_label }}">Activo</label>
+					</div>
+					{{ form.activo.errors }}
+				</div>
 			</div>
 		</div>
 
-		<div class="col-12">
-			<div class="form-check">
-				{{ form.activo }}
-				<label class="form-check-label" for="{{ form.activo.id_for_label }}">Activo</label>
+		<div class="wizard-panel" data-panel="2" hidden>
+			<div class="row g-3">
+				<div class="col-12">
+					<div class="row g-2 align-items-end">
+						<div class="col">
+							<label class="form-label mb-1" for="id_medicamento_busqueda">Medicamento</label>
+							<select id="id_medicamento_busqueda"
+								class="form-select" data-medicamento-select="true">
+							</select>
+						</div>
+						<div class="col-auto" style="width: 8rem;">
+							<label class="form-label mb-1" for="id_cantidad">Cantidad</label>
+							<input type="number" id="id_cantidad" min="1"
+								class="form-control" placeholder="0">
+						</div>
+						<div class="col-auto">
+							<button type="button" id="btn-agregar-med"
+								class="btn btn-brand px-3" title="Agregar medicamento a la lista">
+								<i class="bi bi-plus-lg"></i> Agregar
+							</button>
+						</div>
+					</div>
+				</div>
+				<div class="col-12">
+					<label class="form-label" for="id_info_formula_fisica">Información de la Fórmula Física</label>
+					<textarea id="id_info_formula_fisica" name="info_formula_fisica"
+						class="form-control" rows="3"
+						placeholder="Información adicional de la fórmula física..."></textarea>
+				</div>
+				<div class="col-12" id="tabla-medicamentos-wrapper" style="display:none;">
+					<div class="table-responsive">
+						<table class="table table-sm align-middle mb-0">
+							<thead>
+								<tr>
+									<th>Medicamento</th>
+									<th style="width:8rem;">Cantidad</th>
+									<th style="width:3rem;"></th>
+								</tr>
+							</thead>
+							<tbody id="tabla-medicamentos-body"></tbody>
+						</table>
+					</div>
+				</div>
 			</div>
-			{{ form.activo.errors }}
-		</div>
 		</div>
 
-		<div class="d-flex flex-wrap justify-content-end gap-2 mt-4">
-			<button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
-			<button class="btn btn-brand" type="submit">Guardar fórmula</button>
+		<div class="wizard-panel" data-panel="3" hidden>
+			<div class="row g-3">
+				<div class="col-12">
+					<label class="form-label">Subir Archivo (Formula Medica)</label>
+					<p class="text-muted small mb-2">Adjunta la foto o el PDF de la formula fisica que trajo el paciente.</p>
+					<div id="dropzone-formula"
+						class="dropzone-area"
+						role="button"
+						tabindex="0"
+						aria-label="Area para arrastrar y soltar archivos de la formula medica">
+						<input type="file" id="id_archivos_formula" name="archivos_formula"
+							accept="image/*,.pdf" multiple
+							class="dropzone-input" aria-hidden="true">
+						<div class="dropzone-prompt" id="dropzone-prompt">
+							<i class="bi bi-cloud-arrow-up fs-2 text-muted"></i>
+							<p class="mb-0 mt-2 fw-medium">Arrastra archivos aca o haz clic para seleccionar</p>
+							<p class="text-muted small mb-0">Imagenes o PDF - Multiples archivos permitidos</p>
+						</div>
+						<div class="dropzone-thumbs" id="dropzone-thumbs" hidden></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="d-flex flex-wrap justify-content-between gap-2 mt-4">
+			<div class="d-flex gap-2">
+				<button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">
+					Cancelar
+				</button>
+				<button type="button" id="btn-wizard-prev" class="btn btn-outline-secondary" hidden>
+					<i class="bi bi-arrow-left"></i> Anterior
+				</button>
+			</div>
+			<div class="d-flex gap-2">
+				<button type="button" id="btn-wizard-next" class="btn btn-brand px-4">
+					Siguiente <i class="bi bi-arrow-right"></i>
+				</button>
+				<button type="submit" id="btn-wizard-submit" class="btn btn-brand px-4" hidden>
+					<i class="bi bi-check-lg"></i> Guardar formula
+				</button>
+			</div>
 		</div>
 	</form>
 </div>

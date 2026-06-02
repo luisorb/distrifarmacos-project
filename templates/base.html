@@ -195,6 +195,81 @@
     }
 
     /* -----------------------------------------------------------------------
+       Multi-step wizard stepper
+    ----------------------------------------------------------------------- */
+    .wizard-stepper {
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+    }
+
+    .wizard-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .wizard-step-dot {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: #fff;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, background 0.2s, color 0.2s;
+      position: relative;
+      z-index: 1;
+    }
+
+    .wizard-step.active .wizard-step-dot {
+      border-color: var(--brand);
+      background: var(--brand);
+      color: #fff;
+    }
+
+    .wizard-step.done .wizard-step-dot {
+      border-color: var(--brand);
+      background: rgba(15, 118, 110, 0.12);
+      color: var(--brand);
+    }
+
+    .wizard-step-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      white-space: nowrap;
+      transition: color 0.2s;
+      line-height: 1;
+    }
+
+    .wizard-step.active .wizard-step-label,
+    .wizard-step.done  .wizard-step-label {
+      color: var(--brand);
+      font-weight: 500;
+    }
+
+    /* The connecting line sits in its own flex item between two steps */
+    .wizard-step-line {
+      flex: 1;
+      height: 2px;
+      background: var(--border);
+      /* vertically centers the line with the dot (dot = 2rem = 32px, half = 1rem) */
+      margin-top: 1rem;
+      transition: background 0.2s;
+    }
+
+    .wizard-step-line.done {
+      background: var(--brand);
+    }
+
+    /* -----------------------------------------------------------------------
        Drag & drop file upload zone
     ----------------------------------------------------------------------- */
     .dropzone-area {
@@ -504,6 +579,94 @@
         keyboard: false,
       });
     });
+
+    // ---------------------------------------------------------------------------
+    // Multi-step wizard (#form-radicar)
+    // Controls panel visibility and stepper state. Works via event delegation.
+    // ---------------------------------------------------------------------------
+    (function () {
+      var TOTAL = 3;
+
+      var TITLES = {
+        1: 'Datos de la fórmula',
+        2: 'Medicamentos',
+        3: 'Archivos adjuntos',
+      };
+
+      function getForm()    { return document.getElementById('form-radicar'); }
+      function getStep()    { return parseInt((getForm() || {}).dataset.wizardStep || '1', 10); }
+
+      function setStep(next) {
+        var form = getForm();
+        if (!form) return;
+        var prev = getStep();
+
+        // Panels
+        form.querySelectorAll('.wizard-panel').forEach(function (p) {
+          p.hidden = parseInt(p.dataset.panel, 10) !== next;
+        });
+
+        // Stepper dots + lines
+        var modal = document.getElementById('appModal') || document.body;
+        modal.querySelectorAll('.wizard-step').forEach(function (dot) {
+          var s = parseInt(dot.dataset.step, 10);
+          dot.classList.toggle('active', s === next);
+          dot.classList.toggle('done',   s < next);
+        });
+        modal.querySelectorAll('.wizard-step-line').forEach(function (line, idx) {
+          // line 0 is between step 1 and 2; line 1 is between step 2 and 3
+          line.classList.toggle('done', idx + 1 < next);
+        });
+
+        // Title
+        var titleEl = modal.querySelector('.wizard-title');
+        if (titleEl) titleEl.textContent = TITLES[next] || '';
+
+        // Buttons
+        var btnPrev   = document.getElementById('btn-wizard-prev');
+        var btnNext   = document.getElementById('btn-wizard-next');
+        var btnSubmit = document.getElementById('btn-wizard-submit');
+
+        if (btnPrev)   btnPrev.hidden   = (next === 1);
+        if (btnNext)   btnNext.hidden   = (next === TOTAL);
+        if (btnSubmit) btnSubmit.hidden = (next !== TOTAL);
+
+        form.dataset.wizardStep = next;
+
+        // Re-init Select2 when landing on step 2 (it may not have been visible)
+        if (next === 2) {
+          var modalEl = document.getElementById('appModal');
+          if (modalEl) initMedicamentoSelect(modalEl);
+        }
+      }
+
+      // Reset to step 1 when modal opens
+      document.getElementById('appModal').addEventListener('show.bs.modal', function () {
+        var form = getForm();
+        if (form) form.dataset.wizardStep = '1';
+      });
+
+      // After modal content loads, set step 1 explicitly
+      // (called from loadModal's shown.bs.modal handler — piggybacking on the
+      //  existing initMedicamentoSelect call by using a short delay)
+      document.getElementById('appModal').addEventListener('shown.bs.modal', function () {
+        if (document.getElementById('form-radicar')) setStep(1);
+      });
+
+      // Next button
+      document.addEventListener('click', function (e) {
+        if (!e.target.closest('#btn-wizard-next')) return;
+        var step = getStep();
+        if (step < TOTAL) setStep(step + 1);
+      });
+
+      // Prev button
+      document.addEventListener('click', function (e) {
+        if (!e.target.closest('#btn-wizard-prev')) return;
+        var step = getStep();
+        if (step > 1) setStep(step - 1);
+      });
+    })();
 
     // ---------------------------------------------------------------------------
     // Radicar fórmula — medication list logic
