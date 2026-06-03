@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import Q
+import json
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
@@ -122,7 +123,6 @@ def radicar_formula(request):
                     formula.save()
 
                     # 2. Save medications from the JSON payload
-                    import json
                     medicamentos_raw = request.POST.get("medicamentos_json", "[]")
                     try:
                         medicamentos_lista = json.loads(medicamentos_raw)
@@ -192,19 +192,34 @@ class FormulaListView(ListView):
     model = FormulaBase
     template_name = "radicacion/formula_lista.html"
     context_object_name = "formulas"
-    paginate_by = 20
 
     def get_queryset(self):
-        queryset = FormulaBase.objects.select_related("afiliado")
-        term = self.request.GET.get("q", "").strip()
-        if term:
-            queryset = queryset.filter(
-                Q(codigo_formula__icontains=term)
-                | Q(afiliado__numero_documento__icontains=term)
-                | Q(afiliado__nombres__icontains=term)
-                | Q(afiliado__apellidos__icontains=term)
-            )
-        return queryset.order_by("-fecha_creacion")
+        return FormulaBase.objects.select_related("afiliado").order_by("-fecha_creacion")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        formulas = list(context["formulas"])
+        context["formulas_data"] = [
+            {
+                "id": formula.pk,
+                "codigo_formula": formula.codigo_formula,
+                "afiliado": str(formula.afiliado),
+                "afiliado_documento": formula.afiliado.numero_documento,
+                "medico": formula.medico or "",
+                "institucion": formula.institucion,
+                "fecha_formula": formula.fecha_formula.strftime("%Y-%m-%d"),
+                "fecha_formula_display": formula.fecha_formula.strftime("%d/%m/%Y"),
+                "activo": formula.activo,
+                "activo_label": "Activo" if formula.activo else "Inactivo",
+                "activo_badge_class": "text-bg-success" if formula.activo else "text-bg-secondary",
+                "detalle_url": reverse("formula:detalle", args=[formula.pk]),
+                "editar_url": reverse("formula:editar_modal", args=[formula.pk]),
+                "eliminar_url": reverse("formula:eliminar", args=[formula.pk]),
+                "delete_name": f"{formula.codigo_formula} — {formula.afiliado}",
+            }
+            for formula in formulas
+        ]
+        return context
 
 
 class FormulaCreateView(AjaxModelFormMixin, CreateView):
@@ -230,8 +245,128 @@ def formula_detalle(request, pk):
     return render(request, "radicacion/formula_detalle.html", context)
 
 
+def editar_formula(request, pk):
+    formula = get_object_or_404(
+        FormulaBase.objects.select_related("afiliado").prefetch_related("tecnologias", "soportes"),
+        pk=pk,
+    )
+    afiliado = formula.afiliado
+    afiliado_display = f"{afiliado.nombres} {afiliado.apellidos}"
+
+    if request.method == "POST":
+        form = FormulaBaseForm(request.POST, instance=formula)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    updated = form.save(commit=False)
+                    updated.afiliado_id = formula.afiliado_id
+                    updated.save()
+
+                    medicamentos_raw = request.POST.get("medicamentos_json", "[]")
+                    try:
+                        medicamentos_lista = json.loads(medicamentos_raw)
+                    except (ValueError, TypeError):
+                        medicamentos_lista = []
+
+                    formula.tecnologias.all().delete()
+                    for item in medicamentos_lista:
+                        try:
+                            med_id = int(item.get("id", 0))
+                            cantidad = int(item.get("cantidad", 0))
+                            if med_id and cantidad > 0:
+                                FormulaBaseTecnologia.objects.create(
+                                    formula=formula,
+                                    medicamento_id=med_id,
+                                    cantidad_formulada=cantidad,
+                                    indicaciones=item.get("info", ""),
+                                )
+                        except (ValueError, TypeError):
+                            continue
+
+                    archivos = request.FILES.getlist("archivos_formula")
+                    for archivo in archivos:
+                        SoporteFormulaBase.objects.create(
+                            formula_base=formula,
+                            archivo=archivo,
+                            tipo_soporte="PRESCRIPCION",
+                            usuario_carga=request.user if request.user.is_authenticated else None,
+                        )
+
+            except Exception as exc:
+                if is_ajax_request(request):
+                    return JsonResponse({"ok": False, "error": str(exc)}, status=500)
+                messages.error(request, f"Error al guardar: {exc}")
+
+            if is_ajax_request(request):
+                return JsonResponse({
+                    "ok": True,
+                    "redirect_url": reverse("formula:detalle", kwargs={"pk": formula.pk}),
+                })
+            messages.success(request, f"Formula {formula.codigo_formula} actualizada.")
+            return redirect("formula:detalle", pk=formula.pk)
+
+        if is_ajax_request(request):
+            html = render_to_string(
+                "radicacion/formula_editar_modal.html",
+                _editar_context(formula, form, afiliado_display),
+                request=request,
+            )
+            return HttpResponse(html, status=422)
+
+    else:
+        initial = {"afiliado": afiliado_display}
+        form = FormulaBaseForm(instance=formula, initial=initial)
+
+    context = _editar_context(formula, form, afiliado_display)
+    template = "radicacion/formula_editar_modal.html" if is_ajax_request(request) else "radicacion/formula_form.html"
+    return render(request, template, context)
+
+
+def _editar_context(formula, form, afiliado_display):
+    tecnologias_data = [
+        {
+            "id": str(t.medicamento_id),
+            "label": t.medicamento_nombre,
+            "cantidad": t.cantidad_formulada,
+            "info": t.indicaciones,
+        }
+        for t in formula.tecnologias.select_related("medicamento").all()
+    ]
+    soportes_existentes = [
+        {
+            "nombre": s.nombre_archivo,
+            "url": s.archivo.url,
+            "version": s.version,
+            "tipo": s.get_tipo_soporte_display(),
+            "es_pdf": s.nombre_archivo.lower().endswith(".pdf"),
+        }
+        for s in formula.soportes.all()
+    ]
+    return {
+        "formula": formula,
+        "form": form,
+        "afiliado_display": afiliado_display,
+        "tecnologias_data": tecnologias_data,   # list — serialized by json_script in template
+        "soportes_existentes": soportes_existentes,
+    }
+
+
+@require_POST
+def formula_eliminar(request, pk):
+    formula = get_object_or_404(FormulaBase, pk=pk)
+    formula.delete()
+    if is_ajax_request(request):
+        return JsonResponse({"ok": True})
+    return redirect("formula:lista")
+
+
 @require_POST
 def formula_agregar_tecnologia(request, pk):
+    formula = get_object_or_404(FormulaBase, pk=pk)
+    formula.delete()
+    if is_ajax_request(request):
+        return JsonResponse({"ok": True})
+    return redirect("formula:lista")
     formula = get_object_or_404(FormulaBase, pk=pk)
     form = TecnologiaForm(request.POST)
     if form.is_valid():

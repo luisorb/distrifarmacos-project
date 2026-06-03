@@ -13,6 +13,8 @@ urlpatterns = [
         name="crear_modal",
     ),
     path("<int:pk>/", views.formula_detalle, name="detalle"),
+    path("<int:pk>/editar/modal/", views.editar_formula, name="editar_modal"),
+    path("<int:pk>/eliminar/", views.formula_eliminar, name="eliminar"),
     path("<int:pk>/tecnologia/", views.formula_agregar_tecnologia, name="agregar_tecnologia"),
     path("<int:pk>/soporte/", views.cargar_soporte, name="cargar_soporte"),
     path("api/medicamentos/", views.buscar_medicamento, name="api_medicamentos"),

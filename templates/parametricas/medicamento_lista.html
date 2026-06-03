@@ -9,46 +9,345 @@
     <p class="text-muted mb-0">Catálogo activo y buscable del maestro de medicamentos.</p>
   </div>
   <div class="d-flex gap-2">
-    <a class="btn btn-brand" href="{% url 'parametricas:crear' %}">Nuevo medicamento</a>
-    <a class="btn btn-soft" data-modal-url="{% url 'parametricas:crear_modal' %}" href="#">Crear en modal</a>
+    <a class="btn btn-brand" data-modal-url="{% url 'parametricas:crear_modal' %}" href="#">
+      <i class="bi bi-plus-lg"></i> Nuevo medicamento
+    </a>
   </div>
 </div>
 
-<div class="table-card p-3 p-md-4">
+<div class="table-card p-3 p-md-4" id="medicamentosTableApp">
+  {{ medicamentos_data|json_script:"medicamentos-data" }}
+
+  <div class="row g-3 align-items-end mb-3">
+    <div class="col-12 col-lg-7">
+      <label class="form-label fw-semibold" for="medicamentosSearch">Buscar</label>
+      <input id="medicamentosSearch" class="form-control" type="search"
+             placeholder="CUM, nombre genérico, titular o concentración">
+    </div>
+    <div class="col-6 col-lg-3">
+      <label class="form-label fw-semibold" for="medicamentosEstadoFiltro">Estado</label>
+      <select id="medicamentosEstadoFiltro" class="form-select">
+        <option value="">Todos</option>
+        <option value="true">Activo</option>
+        <option value="false">Inactivo</option>
+      </select>
+    </div>
+    <div class="col-6 col-lg-2">
+      <label class="form-label fw-semibold" for="medicamentosPageSize">Filas</label>
+      <select id="medicamentosPageSize" class="form-select">
+        <option value="5">5</option>
+        <option value="10" selected>10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <p class="text-muted mb-0" id="medicamentosTableSummary">Cargando medicamentos...</p>
+    <small class="text-muted" data-table-range-info></small>
+  </div>
+
   <div class="table-responsive">
     <table class="table align-middle mb-0">
-      <thead>
+      <thead data-table-head></thead>
+      <tbody data-table-body>
         <tr>
-          <th>CUM</th>
-          <th>Nombre genérico</th>
-          <th>Titular</th>
-          <th>Concentración</th>
-          <th>Estado</th>
-          <th class="text-end">Acciones</th>
+          <td colspan="7" class="text-center text-muted py-5">Cargando tabla...</td>
         </tr>
-      </thead>
-      <tbody>
-        {% for medicamento in medicamentos %}
-          <tr>
-            <td>{{ medicamento.cum }}</td>
-            <td>{{ medicamento.nombre_generico }}</td>
-            <td>{{ medicamento.titular_registro }}</td>
-            <td>{{ medicamento.concentracion }}</td>
-            <td>{% if medicamento.activo %}<span class="badge text-bg-success">Activo</span>{% else %}<span class="badge text-bg-secondary">Inactivo</span>{% endif %}</td>
-            <td class="text-end">
-              <a class="btn btn-sm btn-outline-secondary" href="{% url 'parametricas:editar' medicamento.pk %}">Editar</a>
-              <a class="btn btn-sm btn-outline-secondary" data-modal-url="{% url 'parametricas:editar_modal' medicamento.pk %}" href="#">Modal</a>
-              <form class="d-inline" method="post" action="{% url 'parametricas:eliminar' medicamento.pk %}" onsubmit="return confirm('¿Eliminar medicamento?');">
-                {% csrf_token %}
-                <button class="btn btn-sm btn-outline-danger" type="submit">Eliminar</button>
-              </form>
-            </td>
-          </tr>
-        {% empty %}
-          <tr><td colspan="6" class="text-center text-muted py-5">No hay medicamentos cargados.</td></tr>
-        {% endfor %}
       </tbody>
     </table>
   </div>
+
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3 pt-3 border-top">
+    <small class="text-muted" data-table-page-info></small>
+    <nav aria-label="Paginación de medicamentos">
+      <ul class="pagination pagination-sm mb-0 align-items-center" data-pagination-list></ul>
+    </nav>
+  </div>
 </div>
+
+<style>
+  #medicamentosTableApp .pagination .page-link {
+    color: var(--text);
+    min-width: 34px;
+    padding: .25rem .5rem;
+    border-radius: .375rem;
+    transition: background .12s ease, color .12s ease, transform .06s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #medicamentosTableApp .pagination .page-item.active .page-link {
+    background-color: var(--brand);
+    border-color: var(--brand-dark);
+    color: var(--surface);
+    height: 33px;
+  }
+  #medicamentosTableApp .pagination .page-link:hover:not([disabled]) {
+    background-color: var(--brand-dark);
+    color: var(--surface);
+    transform: translateY(-1px);
+  }
+  #medicamentosTableApp .pagination .page-item.disabled .page-link,
+  #medicamentosTableApp .pagination .page-link[disabled] {
+    color: var(--muted);
+    opacity: .85;
+  }
+  #medicamentosTableApp .page-number { font-weight: 600; line-height: 1; }
+  #medicamentosTableApp [data-table-page-info] { font-weight: 600; color: var(--muted); }
+  #medicamentosTableApp .page-link .bi { font-size: 1rem; }
+  #medicamentosTableApp .form-control,
+  #medicamentosTableApp .form-select { border-radius: 4px; }
+</style>
+
+<script type="module">
+  import {
+    createTable,
+    getCoreRowModel,
+    getFilteredRowModel,
+    getPaginationRowModel,
+    getSortedRowModel,
+    Headers,
+    ColumnPinning,
+    ColumnVisibility,
+    ColumnFiltering,
+    GlobalFiltering,
+    RowSorting,
+    RowPagination,
+  } from 'https://esm.sh/@tanstack/table-core@8.21.3?bundle';
+
+  const root           = document.getElementById('medicamentosTableApp');
+  const data           = JSON.parse(document.getElementById('medicamentos-data').textContent);
+  const searchInput    = document.getElementById('medicamentosSearch');
+  const estadoFiltro   = document.getElementById('medicamentosEstadoFiltro');
+  const pageSizeSelect = document.getElementById('medicamentosPageSize');
+  const tableHead      = root.querySelector('[data-table-head]');
+  const tableBody      = root.querySelector('[data-table-body]');
+  const summary        = document.getElementById('medicamentosTableSummary');
+  const pageInfo       = root.querySelector('[data-table-page-info]');
+  const rangeInfo      = root.querySelector('[data-table-range-info]');
+  const paginationList = root.querySelector('[data-pagination-list]');
+
+  const state = {
+    sorting: [{ id: 'nombre_generico', desc: false }],
+    columnFilters: [],
+    globalFilter: '',
+    columnPinning: { left: [], right: [] },
+    columnVisibility: {},
+    pagination: { pageIndex: 0, pageSize: Number(pageSizeSelect.value) },
+  };
+
+  const resolveUpdater = (u, prev) => typeof u === 'function' ? u(prev) : u;
+
+  const esc = (v) => String(v ?? '')
+    .replaceAll('&', '&amp;').replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+
+  const globalSearchFilter = (row, _colId, filterValue) => {
+    const term = String(filterValue ?? '').trim().toLowerCase();
+    if (!term) return true;
+    const haystack = [
+      row.original.cum,
+      row.original.nombre_generico,
+      row.original.titular_registro,
+      row.original.concentracion,
+    ].join(' ').toLowerCase();
+    return haystack.includes(term);
+  };
+
+  const exactFilter = (row, columnId, filterValue) => {
+    if (filterValue === '' || filterValue == null) return true;
+    return String(row.getValue(columnId)) === String(filterValue);
+  };
+
+  const columns = [
+    {
+      accessorKey: 'cum',
+      header: 'CUM',
+      cell: ({ getValue }) => `<span class="fw-semibold">${esc(getValue())}</span>`,
+    },
+    {
+      accessorKey: 'nombre_generico',
+      header: 'Nombre genérico',
+      cell: ({ getValue }) => esc(getValue()),
+    },
+    {
+      accessorKey: 'titular_registro',
+      header: 'Titular',
+      cell: ({ getValue }) => esc(getValue()),
+    },
+    {
+      accessorKey: 'concentracion',
+      header: 'Concentración',
+      cell: ({ getValue }) => esc(getValue()),
+    },
+    {
+      accessorKey: 'activo',
+      header: 'Estado',
+      cell: ({ row }) =>
+        `<span class="badge ${esc(row.original.activo_badge_class)}">${esc(row.original.activo_label)}</span>`,
+      filterFn: exactFilter,
+    },
+    {
+      id: 'acciones',
+      header: 'Acciones',
+      enableSorting: false,
+      enableColumnFilter: false,
+      cell: ({ row }) => {
+        const m = row.original;
+        return `
+          <div class="d-flex justify-content-end gap-1">
+            <a class="btn btn-sm icon-btn btn-action"
+               data-modal-url="${esc(m.editar_url)}" href="#"
+               title="Editar" aria-label="Editar ${esc(m.nombre_generico)}">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <button class="btn btn-sm icon-btn btn-action-delete"
+                    type="button"
+                    data-med-delete-url="${esc(m.eliminar_url)}"
+                    data-med-delete-name="${esc(m.nombre_generico)}"
+                    title="Eliminar" aria-label="Eliminar ${esc(m.nombre_generico)}">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>`;
+      },
+    },
+  ];
+
+  let table = null;
+
+  const renderHeaderCell = (header) => {
+    if (header.isPlaceholder) return '<th></th>';
+    const col = header.column;
+    const thClass = col.id === 'acciones' ? ' class="text-end"' : '';
+    const sortState = col.getIsSorted();
+    const sortIcon = sortState === 'asc'
+      ? '<i class="bi bi-sort-up ms-1"></i>'
+      : sortState === 'desc'
+        ? '<i class="bi bi-sort-down ms-1"></i>'
+        : '<i class="bi bi-arrow-down-up ms-1 text-muted"></i>';
+    const title = typeof col.columnDef.header === 'string' ? col.columnDef.header : col.id;
+    if (!col.getCanSort()) return `<th${thClass}>${title}</th>`;
+    return `<th${thClass}>
+      <button type="button" class="btn btn-link p-0 text-decoration-none text-reset fw-semibold"
+              data-sort-column="${col.id}">
+        ${title}${sortIcon}
+      </button>
+    </th>`;
+  };
+
+  const makePageItem = (label, action, disabled = false, active = false, icon = null) => `
+    <li class="page-item ${disabled ? 'disabled' : ''} ${active ? 'active' : ''}">
+      <button class="page-link d-inline-flex align-items-center justify-content-center"
+              type="button" data-page-action="${action}"
+              aria-label="${label}" title="${label}"
+              ${disabled ? 'disabled' : ''} ${active ? 'aria-current="page"' : ''}>
+        ${icon ? `<i class="bi ${icon}"></i>` : `<span class="page-number">${esc(label)}</span>`}
+      </button>
+    </li>`;
+
+  const render = () => {
+    table = createTable({
+      _features: [Headers, ColumnPinning, ColumnVisibility, ColumnFiltering,
+                  GlobalFiltering, RowSorting, RowPagination],
+      data, columns, state,
+      getCoreRowModel: getCoreRowModel(),
+      getFilteredRowModel: getFilteredRowModel(),
+      getSortedRowModel: getSortedRowModel(),
+      getPaginationRowModel: getPaginationRowModel(),
+      globalFilterFn: globalSearchFilter,
+      onSortingChange: (u) => { state.sorting = resolveUpdater(u, state.sorting); render(); },
+      onColumnFiltersChange: (u) => {
+        state.columnFilters = resolveUpdater(u, state.columnFilters);
+        state.pagination = { ...state.pagination, pageIndex: 0 };
+        render();
+      },
+      onGlobalFilterChange: (u) => {
+        state.globalFilter = resolveUpdater(u, state.globalFilter);
+        state.pagination = { ...state.pagination, pageIndex: 0 };
+        render();
+      },
+      onPaginationChange: (u) => { state.pagination = resolveUpdater(u, state.pagination); render(); },
+    });
+
+    tableHead.innerHTML = table.getHeaderGroups()
+      .map((hg) => `<tr>${hg.headers.map(renderHeaderCell).join('')}</tr>`).join('');
+
+    const rows = table.getRowModel().rows;
+    const COLS = columns.length;
+    tableBody.innerHTML = rows.length
+      ? rows.map((row) =>
+          `<tr>${row.getVisibleCells().map((cell) => {
+            const fn = cell.column.columnDef.cell;
+            const content = typeof fn === 'function' ? fn(cell.getContext()) : esc(cell.getValue());
+            return `<td>${content}</td>`;
+          }).join('')}</tr>`
+        ).join('')
+      : `<tr><td colspan="${COLS}" class="text-center text-muted py-5">No hay medicamentos para mostrar con los filtros actuales.</td></tr>`;
+
+    const filteredCount = table.getFilteredRowModel().rows.length;
+    const totalCount = data.length;
+    summary.textContent = `${filteredCount} de ${totalCount} medicamentos visibles`;
+
+    const { pageIndex, pageSize } = table.getState().pagination;
+    const pageCount = table.getPageCount();
+    const start = filteredCount === 0 ? 0 : pageIndex * pageSize + 1;
+    const end = Math.min((pageIndex + 1) * pageSize, filteredCount);
+
+    pageInfo.textContent = `Página ${filteredCount === 0 ? 0 : pageIndex + 1} de ${pageCount || 0}`;
+    rangeInfo.textContent = filteredCount === 0 ? 'Sin resultados' : `Mostrando ${start}–${end} de ${filteredCount}`;
+
+    paginationList.innerHTML = [
+      makePageItem('Primera', 'first', !table.getCanPreviousPage(), false, 'bi-skip-start-fill'),
+      makePageItem('Anterior', 'prev',  !table.getCanPreviousPage(), false, 'bi-chevron-left'),
+      pageCount > 0
+        ? makePageItem(String(pageIndex + 1), String(pageIndex), false, true)
+        : makePageItem('0', '0', true, false),
+      makePageItem('Siguiente', 'next', !table.getCanNextPage(), false, 'bi-chevron-right'),
+      makePageItem('Última',    'last', !table.getCanNextPage(), false, 'bi-skip-end-fill'),
+    ].join('');
+  };
+
+  // Sort and pagination clicks
+  root.addEventListener('click', (e) => {
+    const sortBtn = e.target.closest('[data-sort-column]');
+    if (sortBtn) {
+      e.preventDefault();
+      table.getColumn(sortBtn.dataset.sortColumn).toggleSorting(undefined, e.shiftKey);
+      return;
+    }
+
+    const pageBtn = e.target.closest('[data-page-action]');
+    if (pageBtn) {
+      e.preventDefault();
+      const action = pageBtn.dataset.pageAction;
+      if (action === 'prev') table.previousPage();
+      else if (action === 'first') table.setPageIndex(0);
+      else if (action === 'last') table.setPageIndex(Math.max(table.getPageCount() - 1, 0));
+      else if (/^\d+$/.test(action)) table.setPageIndex(Number(action));
+      else table.nextPage();
+      return;
+    }
+
+    // Delete button — reuse the existing deleteAffiliateModal pattern
+    const delBtn = e.target.closest('[data-med-delete-url]');
+    if (delBtn) {
+      const deleteForm = document.getElementById('deleteAffiliateForm');
+      const deleteMessage = document.getElementById('deleteAffiliateMessage');
+      deleteForm.action = delBtn.dataset.medDeleteUrl;
+      deleteMessage.textContent =
+        `Vas a eliminar "${delBtn.dataset.medDeleteName}". Esta acción no se puede deshacer.`;
+      bootstrap.Modal.getOrCreateInstance(
+        document.getElementById('deleteAffiliateModal')
+      ).show();
+    }
+  });
+
+  searchInput.addEventListener('input', (e) => table.setGlobalFilter(e.target.value.trim()));
+  estadoFiltro.addEventListener('change', (e) => table.getColumn('activo').setFilterValue(e.target.value));
+  pageSizeSelect.addEventListener('change', (e) => table.setPageSize(Number(e.target.value)));
+
+  render();
+</script>
 {% endblock %}

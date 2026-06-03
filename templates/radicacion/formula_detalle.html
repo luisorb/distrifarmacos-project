@@ -115,7 +115,7 @@
                  style="background-image: url('{{ soporte.archivo.url }}')"></div>
           {% endif %}
           <div class="soporte-info mt-2">
-            <div class="small fw-medium text-truncate text-body">{{ soporte.nombre_archivo }}</div>
+            <div class="small fw-medium text-body" style="word-break: break-all;">{{ soporte.nombre_archivo }}</div>
             <div class="text-muted" style="font-size: 0.7rem;">
               {{ soporte.get_tipo_soporte_display }} · v{{ soporte.version }}
             </div>

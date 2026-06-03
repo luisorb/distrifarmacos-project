@@ -1,6 +1,9 @@
+import os
+import re
 from django.conf import settings
 from django.db import models
 from django.db.models import Max
+from django.utils import timezone
 
 from parametricas.models import Medicamento, ModeloBase
 
@@ -60,9 +63,34 @@ class FormulaBase(ModeloBase):
         return self.codigo_formula or "Nueva fórmula"
 
 
+def _soporte_upload_path(instance, filename):
+    """
+    Builds the storage path and filename following the convention:
+    soportes/OPF_{cedula}_{codigo}_{sigla}_{fecha}_v{version}.{ext}
+
+    - cedula  : afiliado's document number
+    - codigo  : formula code (e.g. FOR-000001)
+    - sigla   : sanitized tipo_soporte (e.g. PRESCRIPCION)
+    - fecha   : today in YYYYMMDD
+    - version : auto-incremented per formula+tipo_soporte combination
+    - ext     : original file extension, preserved (pdf, jpg, png, …)
+    """
+    formula     = instance.formula_base
+    afiliado    = formula.afiliado
+    cedula      = re.sub(r"[^A-Za-z0-9]", "", afiliado.numero_documento)
+    codigo      = re.sub(r"[^A-Za-z0-9]", "", formula.codigo_formula)
+    sigla       = re.sub(r"[^A-Za-z0-9]", "", instance.tipo_soporte).upper()
+    fecha       = timezone.localdate().strftime("%Y%m%d")
+    version     = instance.version  # already computed before save() calls super()
+    _, ext      = os.path.splitext(filename)
+    ext         = ext.lower() if ext else ".bin"
+    nuevo_nombre = f"OPF_{cedula}_{codigo}_{sigla}_{fecha}_v{version}{ext}"
+    return f"soportes/{nuevo_nombre}"
+
+
 class SoporteFormulaBase(ModeloBase):
     formula_base = models.ForeignKey(FormulaBase, on_delete=models.CASCADE, related_name="soportes")
-    archivo = models.FileField(upload_to="soportes/")
+    archivo = models.FileField(upload_to=_soporte_upload_path)
     tipo_soporte = models.CharField(max_length=50, choices=TipoSoporte.choices)
     medicamento = models.ForeignKey(
         Medicamento,
@@ -90,6 +118,8 @@ class SoporteFormulaBase(ModeloBase):
             self.medicamento_nombre = (
                 f"{self.medicamento.cum} - {self.medicamento.nombre_generico} {self.medicamento.concentracion}"
             )
+        # Version must be resolved BEFORE super().save() so _soporte_upload_path
+        # can read self.version when Django calls upload_to on the FileField.
         if not self.pk:
             ultimo_version = (
                 SoporteFormulaBase.objects.filter(

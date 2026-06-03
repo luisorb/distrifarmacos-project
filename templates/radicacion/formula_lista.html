@@ -8,49 +8,335 @@
     <h1 class="h3 mb-1">Fórmulas</h1>
     <p class="text-muted mb-0">Listado de radicaciones</p>
   </div>
-  <div class="d-flex gap-2">
-    <!--a class="btn btn-brand" data-modal-url="{% url 'formula:crear_modal' %}" href="#">Crear en modal</a-->
-  </div>
 </div>
 
-<div class="table-card p-3 p-md-4">
-  <form class="row g-2 mb-4" method="get">
-    <div class="col-md-9">
-      <input type="search" class="form-control" name="q" value="{{ request.GET.q }}" placeholder="Buscar por código, documento o nombre">
+<div class="table-card p-3 p-md-4" id="formulasTableApp">
+  {{ formulas_data|json_script:"formulas-data" }}
+
+  <div class="row g-3 align-items-end mb-3">
+    <div class="col-12 col-lg-6">
+      <label class="form-label fw-semibold" for="formulasSearch">Buscar</label>
+      <input id="formulasSearch" class="form-control" type="search"
+             placeholder="Código, documento, afiliado, médico o institución">
     </div>
-    <div class="col-md-3 d-grid">
-      <button class="btn btn-brand" type="submit">Buscar</button>
+    <div class="col-6 col-lg-2">
+      <label class="form-label fw-semibold" for="formulasEstadoFiltro">Estado</label>
+      <select id="formulasEstadoFiltro" class="form-select">
+        <option value="">Todos</option>
+        <option value="true">Activo</option>
+        <option value="false">Inactivo</option>
+      </select>
     </div>
-  </form>
+    <div class="col-6 col-lg-2">
+      <label class="form-label fw-semibold" for="formulasPageSize">Filas</label>
+      <select id="formulasPageSize" class="form-select">
+        <option value="5">5</option>
+        <option value="10" selected>10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <p class="text-muted mb-0" id="formulasTableSummary">Cargando fórmulas...</p>
+    <small class="text-muted" data-table-range-info></small>
+  </div>
+
   <div class="table-responsive">
     <table class="table align-middle mb-0">
-      <thead>
+      <thead data-table-head></thead>
+      <tbody data-table-body>
         <tr>
-          <th>Código</th>
-          <th>Afiliado</th>
-          <th>Médico</th>
-          <th>Institución</th>
-          <th>Fecha</th>
-          <th class="text-end">Acciones</th>
+          <td colspan="7" class="text-center text-muted py-5">Cargando tabla...</td>
         </tr>
-      </thead>
-      <tbody>
-        {% for formula in formulas %}
-          <tr>
-            <td>{{ formula.codigo_formula }}</td>
-            <td>{{ formula.afiliado }}</td>
-            <td>{{ formula.medico }}</td>
-            <td>{{ formula.institucion }}</td>
-            <td>{{ formula.fecha_formula }}</td>
-            <td class="text-end">
-              <a class="btn btn-sm btn-brand" href="{% url 'formula:detalle' formula.pk %}">Ver detalle</a>
-            </td>
-          </tr>
-        {% empty %}
-          <tr><td colspan="6" class="text-center text-muted py-5">No hay fórmulas registradas.</td></tr>
-        {% endfor %}
       </tbody>
     </table>
   </div>
+
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3 pt-3 border-top">
+    <small class="text-muted" data-table-page-info></small>
+    <nav aria-label="Paginación de fórmulas">
+      <ul class="pagination pagination-sm mb-0 align-items-center" data-pagination-list></ul>
+    </nav>
+  </div>
 </div>
+
+<style>
+  #formulasTableApp .pagination .page-link {
+    color: var(--text);
+    min-width: 34px;
+    padding: .25rem .5rem;
+    border-radius: .375rem;
+    transition: background .12s ease, color .12s ease, transform .06s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #formulasTableApp .pagination .page-item.active .page-link {
+    background-color: var(--brand);
+    border-color: var(--brand-dark);
+    color: var(--surface);
+    height: 33px;
+  }
+  #formulasTableApp .pagination .page-link:hover:not([disabled]) {
+    background-color: var(--brand-dark);
+    color: var(--surface);
+    transform: translateY(-1px);
+  }
+  #formulasTableApp .pagination .page-item.disabled .page-link,
+  #formulasTableApp .pagination .page-link[disabled] {
+    color: var(--muted);
+    opacity: .85;
+  }
+  #formulasTableApp .page-number { font-weight: 600; line-height: 1; }
+  #formulasTableApp [data-table-page-info] { font-weight: 600; color: var(--muted); }
+  #formulasTableApp .page-link .bi { font-size: 1rem; }
+  #formulasTableApp .form-control,
+  #formulasTableApp .form-select { border-radius: 4px; }
+</style>
+
+<script type="module">
+  import {
+    createTable,
+    getCoreRowModel,
+    getFilteredRowModel,
+    getPaginationRowModel,
+    getSortedRowModel,
+    Headers,
+    ColumnPinning,
+    ColumnVisibility,
+    ColumnFiltering,
+    GlobalFiltering,
+    RowSorting,
+    RowPagination,
+  } from 'https://esm.sh/@tanstack/table-core@8.21.3?bundle';
+
+  const root        = document.getElementById('formulasTableApp');
+  const data        = JSON.parse(document.getElementById('formulas-data').textContent);
+  const searchInput = document.getElementById('formulasSearch');
+  const estadoFiltro = document.getElementById('formulasEstadoFiltro');
+  const pageSizeSelect = document.getElementById('formulasPageSize');
+  const tableHead   = root.querySelector('[data-table-head]');
+  const tableBody   = root.querySelector('[data-table-body]');
+  const summary     = document.getElementById('formulasTableSummary');
+  const pageInfo    = root.querySelector('[data-table-page-info]');
+  const rangeInfo   = root.querySelector('[data-table-range-info]');
+  const paginationList = root.querySelector('[data-pagination-list]');
+
+  const state = {
+    sorting: [{ id: 'fecha_formula', desc: true }],
+    columnFilters: [],
+    globalFilter: '',
+    columnPinning: { left: [], right: [] },
+    columnVisibility: {},
+    pagination: { pageIndex: 0, pageSize: Number(pageSizeSelect.value) },
+  };
+
+  const resolveUpdater = (updater, prev) =>
+    typeof updater === 'function' ? updater(prev) : updater;
+
+  const esc = (v) => String(v ?? '')
+    .replaceAll('&', '&amp;').replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+
+  const globalSearchFilter = (row, _colId, filterValue) => {
+    const term = String(filterValue ?? '').trim().toLowerCase();
+    if (!term) return true;
+    const haystack = [
+      row.original.codigo_formula,
+      row.original.afiliado_documento,
+      row.original.afiliado,
+      row.original.medico,
+      row.original.institucion,
+    ].join(' ').toLowerCase();
+    return haystack.includes(term);
+  };
+
+  const exactFilter = (row, columnId, filterValue) => {
+    if (filterValue === '' || filterValue == null) return true;
+    return String(row.getValue(columnId)) === String(filterValue);
+  };
+
+  const columns = [
+    {
+      accessorKey: 'codigo_formula',
+      header: 'Código',
+      cell: ({ getValue }) => `<span class="fw-semibold">${esc(getValue())}</span>`,
+    },
+    {
+      accessorKey: 'afiliado',
+      header: 'Afiliado',
+      cell: ({ getValue }) => esc(getValue()),
+    },
+    {
+      accessorKey: 'medico',
+      header: 'Médico',
+      cell: ({ getValue }) => esc(getValue()) || '<span class="text-muted">—</span>',
+    },
+    {
+      accessorKey: 'institucion',
+      header: 'Institución',
+      cell: ({ getValue }) => esc(getValue()),
+    },
+    {
+      accessorKey: 'fecha_formula',
+      header: 'Fecha',
+      cell: ({ row }) => esc(row.original.fecha_formula_display),
+    },
+    {
+      accessorKey: 'activo',
+      header: 'Estado',
+      cell: ({ row }) =>
+        `<span class="badge ${esc(row.original.activo_badge_class)}">${esc(row.original.activo_label)}</span>`,
+      filterFn: exactFilter,
+    },
+    {
+      id: 'acciones',
+      header: 'Acciones',
+      enableSorting: false,
+      enableColumnFilter: false,
+      cell: ({ row }) =>
+        `<div class="d-flex justify-content-end gap-1">
+          <a class="btn btn-sm icon-btn btn-action" href="${esc(row.original.detalle_url)}"
+             title="Ver detalle" aria-label="Ver detalle fórmula ${esc(row.original.codigo_formula)}">
+            <i class="bi bi-eye"></i>
+          </a>
+          <a class="btn btn-sm icon-btn btn-action"
+             data-modal-url="${esc(row.original.editar_url)}" href="#"
+             title="Editar" aria-label="Editar fórmula ${esc(row.original.codigo_formula)}">
+            <i class="bi bi-pencil"></i>
+          </a>
+          <button class="btn btn-sm icon-btn btn-action-delete"
+                  type="button"
+                  data-delete-url="${esc(row.original.eliminar_url)}"
+                  data-delete-name="${esc(row.original.delete_name)}"
+                  data-bs-toggle="modal"
+                  data-bs-target="#deleteAffiliateModal"
+                  title="Eliminar" aria-label="Eliminar fórmula ${esc(row.original.codigo_formula)}">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>`,
+    },
+  ];
+
+  let table = null;
+
+  const renderHeaderCell = (header) => {
+    if (header.isPlaceholder) return '<th></th>';
+    const col = header.column;
+    const thClass = col.id === 'acciones' ? ' class="text-end"' : '';
+    const sortState = col.getIsSorted();
+    const sortIcon = sortState === 'asc'
+      ? '<i class="bi bi-sort-up ms-1"></i>'
+      : sortState === 'desc'
+        ? '<i class="bi bi-sort-down ms-1"></i>'
+        : '<i class="bi bi-arrow-down-up ms-1 text-muted"></i>';
+    const title = typeof col.columnDef.header === 'string' ? col.columnDef.header : col.id;
+    if (!col.getCanSort()) return `<th${thClass}>${title}</th>`;
+    return `<th${thClass}>
+      <button type="button" class="btn btn-link p-0 text-decoration-none text-reset fw-semibold"
+              data-sort-column="${col.id}">
+        ${title}${sortIcon}
+      </button>
+    </th>`;
+  };
+
+  const makePageItem = (label, action, disabled = false, active = false, icon = null) => `
+    <li class="page-item ${disabled ? 'disabled' : ''} ${active ? 'active' : ''}">
+      <button class="page-link d-inline-flex align-items-center justify-content-center"
+              type="button" data-page-action="${action}"
+              aria-label="${label}" title="${label}"
+              ${disabled ? 'disabled' : ''} ${active ? 'aria-current="page"' : ''}>
+        ${icon ? `<i class="bi ${icon}"></i>` : `<span class="page-number">${esc(label)}</span>`}
+      </button>
+    </li>`;
+
+  const render = () => {
+    table = createTable({
+      _features: [Headers, ColumnPinning, ColumnVisibility, ColumnFiltering,
+                  GlobalFiltering, RowSorting, RowPagination],
+      data, columns, state,
+      getCoreRowModel: getCoreRowModel(),
+      getFilteredRowModel: getFilteredRowModel(),
+      getSortedRowModel: getSortedRowModel(),
+      getPaginationRowModel: getPaginationRowModel(),
+      globalFilterFn: globalSearchFilter,
+      onSortingChange: (u) => { state.sorting = resolveUpdater(u, state.sorting); render(); },
+      onColumnFiltersChange: (u) => {
+        state.columnFilters = resolveUpdater(u, state.columnFilters);
+        state.pagination = { ...state.pagination, pageIndex: 0 };
+        render();
+      },
+      onGlobalFilterChange: (u) => {
+        state.globalFilter = resolveUpdater(u, state.globalFilter);
+        state.pagination = { ...state.pagination, pageIndex: 0 };
+        render();
+      },
+      onPaginationChange: (u) => { state.pagination = resolveUpdater(u, state.pagination); render(); },
+    });
+
+    tableHead.innerHTML = table.getHeaderGroups()
+      .map((hg) => `<tr>${hg.headers.map(renderHeaderCell).join('')}</tr>`).join('');
+
+    const rows = table.getRowModel().rows;
+    const COLS = columns.length;
+    tableBody.innerHTML = rows.length
+      ? rows.map((row) =>
+          `<tr>${row.getVisibleCells().map((cell) => {
+            const fn = cell.column.columnDef.cell;
+            const content = typeof fn === 'function' ? fn(cell.getContext()) : esc(cell.getValue());
+            return `<td>${content}</td>`;
+          }).join('')}</tr>`
+        ).join('')
+      : `<tr><td colspan="${COLS}" class="text-center text-muted py-5">No hay fórmulas para mostrar con los filtros actuales.</td></tr>`;
+
+    const filteredCount = table.getFilteredRowModel().rows.length;
+    const totalCount = data.length;
+    summary.textContent = `${filteredCount} de ${totalCount} fórmulas visibles`;
+
+    const { pageIndex, pageSize } = table.getState().pagination;
+    const pageCount = table.getPageCount();
+    const start = filteredCount === 0 ? 0 : pageIndex * pageSize + 1;
+    const end = Math.min((pageIndex + 1) * pageSize, filteredCount);
+
+    pageInfo.textContent = `Página ${filteredCount === 0 ? 0 : pageIndex + 1} de ${pageCount || 0}`;
+    rangeInfo.textContent = filteredCount === 0 ? 'Sin resultados' : `Mostrando ${start}–${end} de ${filteredCount}`;
+
+    paginationList.innerHTML = [
+      makePageItem('Primera', 'first', !table.getCanPreviousPage(), false, 'bi-skip-start-fill'),
+      makePageItem('Anterior', 'prev',  !table.getCanPreviousPage(), false, 'bi-chevron-left'),
+      pageCount > 0
+        ? makePageItem(String(pageIndex + 1), String(pageIndex), false, true)
+        : makePageItem('0', '0', true, false),
+      makePageItem('Siguiente', 'next', !table.getCanNextPage(), false, 'bi-chevron-right'),
+      makePageItem('Última',    'last', !table.getCanNextPage(), false, 'bi-skip-end-fill'),
+    ].join('');
+  };
+
+  root.addEventListener('click', (e) => {
+    const sortBtn = e.target.closest('[data-sort-column]');
+    if (sortBtn) {
+      e.preventDefault();
+      table.getColumn(sortBtn.dataset.sortColumn).toggleSorting(undefined, e.shiftKey);
+      return;
+    }
+    const pageBtn = e.target.closest('[data-page-action]');
+    if (pageBtn) {
+      e.preventDefault();
+      const action = pageBtn.dataset.pageAction;
+      if (action === 'prev')  table.previousPage();
+      else if (action === 'first') table.setPageIndex(0);
+      else if (action === 'last')  table.setPageIndex(Math.max(table.getPageCount() - 1, 0));
+      else if (/^\d+$/.test(action)) table.setPageIndex(Number(action));
+      else table.nextPage();
+    }
+  });
+
+  searchInput.addEventListener('input', (e) => table.setGlobalFilter(e.target.value.trim()));
+  estadoFiltro.addEventListener('change', (e) => table.getColumn('activo').setFilterValue(e.target.value));
+  pageSizeSelect.addEventListener('change', (e) => table.setPageSize(Number(e.target.value)));
+
+  render();
+</script>
 {% endblock %}

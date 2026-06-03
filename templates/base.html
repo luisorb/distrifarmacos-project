@@ -584,9 +584,26 @@
         return;
       }
       event.preventDefault();
+
+      // Build FormData manually so programmatically-assigned file inputs
+      // (managed by the DataTransfer-backed dropzone) are included reliably
+      // across all browsers. Assigning to input.files via DataTransfer is not
+      // always picked up by new FormData(form).
+      const fd = new FormData(form);
+
+      // If the dropzone has files, append them directly from the DataTransfer
+      // object rather than relying on the <input> FileList.
+      if (window._dropzoneDt && window._dropzoneDt.files.length > 0) {
+        // Remove the (possibly empty) entry added by FormData from the <input>
+        fd.delete('archivos_formula');
+        for (let i = 0; i < window._dropzoneDt.files.length; i++) {
+          fd.append('archivos_formula', window._dropzoneDt.files[i]);
+        }
+      }
+
       const response = await fetch(form.action, {
         method: form.method,
-        body: new FormData(form),
+        body: fd,
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
       });
       const contentType = response.headers.get('content-type') || '';
@@ -662,7 +679,14 @@
 
         if (btnPrev)   btnPrev.hidden   = (next === 1);
         if (btnNext)   btnNext.hidden   = (next === TOTAL);
-        if (btnSubmit) btnSubmit.hidden = (next !== TOTAL);
+        // In edit mode the submit button has no [hidden] attribute initially —
+        // it should remain visible on all steps. Only hide it on non-final
+        // steps when it was originally hidden (create mode).
+        if (btnSubmit) {
+          var alwaysVisible = btnSubmit.dataset.wizardAlwaysVisible === 'true' ||
+                              !btnSubmit.hasAttribute('data-wizard-initially-hidden');
+          if (!alwaysVisible) btnSubmit.hidden = (next !== TOTAL);
+        }
 
         form.dataset.wizardStep = next;
 
@@ -679,11 +703,21 @@
         if (form) form.dataset.wizardStep = '1';
       });
 
-      // After modal content loads, set step 1 explicitly
-      // (called from loadModal's shown.bs.modal handler — piggybacking on the
-      //  existing initMedicamentoSelect call by using a short delay)
+      // After modal content loads, set step 1 explicitly and pre-populate
+      // the medications array from the hidden field (edit mode).
       document.getElementById('appModal').addEventListener('shown.bs.modal', function () {
-        if (document.getElementById('form-radicar')) setStep(1);
+        if (!document.getElementById('form-radicar')) return;
+        setStep(1);
+        // Pre-populate medications when editing (data in a json_script tag)
+        var scriptEl = document.getElementById('tecnologias-preload');
+        if (scriptEl) {
+          try {
+            var preloaded = JSON.parse(scriptEl.textContent || '[]');
+            if (Array.isArray(preloaded) && preloaded.length > 0) {
+              document.dispatchEvent(new CustomEvent('medicamentos:preload', { detail: preloaded }));
+            }
+          } catch (e) {}
+        }
       });
 
       // Next button
@@ -756,6 +790,20 @@
         medicamentos = [];
       });
 
+      // Pre-populate from existing data when editing a formula
+      document.addEventListener('medicamentos:preload', function (e) {
+        medicamentos = (e.detail || []).map(function (item) {
+          return {
+            id: String(item.id),
+            label: item.label || item.medicamento_nombre || '',
+            cantidad: Number(item.cantidad || item.cantidad_formulada || 0),
+            info: item.info || item.indicaciones || '',
+          };
+        });
+        syncHidden();
+        renderTable();
+      });
+
       // Event delegation — add button
       document.addEventListener('click', function (e) {
         if (!e.target.closest('#btn-agregar-med')) return;
@@ -794,9 +842,12 @@
     // Drag & drop file upload zone (#dropzone-formula)
     // Uses event delegation — works after innerHTML injection via loadModal.
     // Maintains a DataTransfer-backed FileList and keeps the real <input> in sync.
+    // window._dropzoneDt is exposed so the AJAX submit handler can read files
+    // directly instead of relying on input.files (unreliable across browsers).
     // ---------------------------------------------------------------------------
     (function () {
       var dt = new DataTransfer();
+      window._dropzoneDt = dt;  // expose for submit handler
 
       function getInput()   { return document.getElementById('id_archivos_formula'); }
       function getThumbs()  { return document.getElementById('dropzone-thumbs'); }
@@ -903,6 +954,7 @@
           if (i !== idx) fresh.items.add(dt.files[i]);
         }
         dt = fresh;
+        window._dropzoneDt = dt;  // keep global reference in sync
         syncInput();
         renderThumbs();
       }
@@ -910,6 +962,7 @@
       // Reset on modal open
       document.getElementById('appModal').addEventListener('show.bs.modal', function () {
         dt = new DataTransfer();
+        window._dropzoneDt = dt;  // keep global reference in sync
         var c = getThumbs();
         if (c) { c.innerHTML = ''; c.hidden = true; }
       });
