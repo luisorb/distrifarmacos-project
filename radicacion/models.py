@@ -1,6 +1,7 @@
 import os
 import re
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Max
 from django.utils import timezone
@@ -151,6 +152,26 @@ class FormulaBaseTecnologia(ModeloBase):
 
     class Meta:
         ordering = ("-fecha_creacion",)
+
+    def clean(self):
+        super().clean()
+
+        errores = {}
+
+        if not self.formula_id:
+            errores["formula"] = "La fórmula es obligatoria."
+
+        if not self.medicamento_id:
+            errores["medicamento"] = "El medicamento es obligatorio."
+
+        if self.cantidad_formulada is None or self.cantidad_formulada < 1:
+            errores["cantidad_formulada"] = "La cantidad formulada debe ser mayor a cero."
+
+        if self.contrato_asignado and self.contrato_asignado not in {choice[0] for choice in ContratoAsignado.choices}:
+            errores["contrato_asignado"] = "El contrato asignado no es válido."
+
+        if errores:
+            raise ValidationError(errores)
 
     def save(self, *args, **kwargs):
         if self.medicamento_id:
