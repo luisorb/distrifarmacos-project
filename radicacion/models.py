@@ -30,6 +30,11 @@ class ContratoAsignado(models.TextChoices):
     EVENTO = "EVENTO", "Evento"
 
 
+class TipoEntrega(models.TextChoices):
+    TOTAL = "TOTAL", "Total"
+    PARCIAL = "PARCIAL", "Parcial"
+
+
 class Afiliado(ModeloBase):
     tipo_documento = models.CharField(max_length=10, choices=TipoDocumento.choices)
     numero_documento = models.CharField(max_length=30, unique=True)
@@ -184,6 +189,76 @@ class FormulaBaseTecnologia(ModeloBase):
                 ContratoAsignado.CAPITA if "GENERICO" in nombre_busqueda else ContratoAsignado.EVENTO
             )
         super().save(*args, **kwargs)
+        self.sync_detalle_contrato()
+
+    def sync_detalle_contrato(self):
+        DetalleRegistroContrato.objects.update_or_create(
+            tecnologia_origen=self,
+            defaults={
+                "formula": self.formula,
+                "medicamento": self.medicamento,
+                "medicamento_nombre": self.medicamento_nombre,
+                "contrato_asignado": self.contrato_asignado,
+                "dosis": self.dosis,
+                "periodo": "",
+                "tipo_entrega": TipoEntrega.TOTAL,
+                "cantidad_solicitada": self.cantidad_formulada,
+                "cantidad_formulada": self.cantidad_formulada,
+                "cantidad_entregada": 0,
+                "numero_entrega_actual": 1,
+                "numero_entregas_programadas": 1,
+                "observacion": self.indicaciones,
+            },
+        )
 
     def __str__(self) -> str:
         return f"{self.formula} - {self.medicamento_nombre or self.medicamento}"
+
+
+class DetalleRegistroContrato(ModeloBase):
+    tecnologia_origen = models.OneToOneField(
+        FormulaBaseTecnologia,
+        on_delete=models.CASCADE,
+        related_name="detalle_contrato",
+    )
+    formula = models.ForeignKey(FormulaBase, on_delete=models.CASCADE, related_name="detalles_contrato")
+    medicamento = models.ForeignKey(Medicamento, on_delete=models.PROTECT, related_name="detalles_contrato")
+    medicamento_nombre = models.CharField(max_length=400, blank=True)
+    contrato_asignado = models.CharField(max_length=20, choices=ContratoAsignado.choices, blank=True)
+    tipo_entrega = models.CharField(max_length=20, choices=TipoEntrega.choices, default=TipoEntrega.TOTAL)
+    dosis = models.CharField(max_length=120, blank=True)
+    periodo = models.CharField(max_length=120, blank=True)
+    cantidad_solicitada = models.PositiveIntegerField(default=0)
+    cantidad_formulada = models.PositiveIntegerField()
+    cantidad_entregada = models.PositiveIntegerField(default=0)
+    numero_entrega_actual = models.PositiveIntegerField(default=1)
+    numero_entregas_programadas = models.PositiveIntegerField(default=1)
+    observacion = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ("-fecha_creacion",)
+
+    def clean(self):
+        super().clean()
+
+        errores = {}
+        if self.cantidad_entregada > self.cantidad_formulada:
+            errores["cantidad_entregada"] = "La cantidad entregada no puede superar la cantidad formulada."
+        if self.numero_entregas_programadas < 1:
+            errores["numero_entregas_programadas"] = "Debe programarse al menos una entrega."
+        if self.numero_entrega_actual < 1:
+            errores["numero_entrega_actual"] = "La entrega actual debe ser mayor a cero."
+        if self.numero_entrega_actual > self.numero_entregas_programadas:
+            errores["numero_entrega_actual"] = "La entrega actual no puede superar las entregas programadas."
+        if errores:
+            raise ValidationError(errores)
+
+    def save(self, *args, **kwargs):
+        if self.medicamento_id:
+            self.medicamento_nombre = (
+                f"{self.medicamento.cum} - {self.medicamento.nombre_generico} {self.medicamento.concentracion}"
+            )
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.formula} - {self.medicamento_nombre or self.medicamento} ({self.contrato_asignado})"

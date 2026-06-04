@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Afiliado, FormulaBase, FormulaBaseTecnologia, SoporteFormulaBase
+from .models import Afiliado, DetalleRegistroContrato, FormulaBase, FormulaBaseTecnologia, SoporteFormulaBase
 
 
 @admin.register(Afiliado)
@@ -24,4 +24,19 @@ class SoporteFormulaBaseAdmin(admin.ModelAdmin):
 @admin.register(FormulaBaseTecnologia)
 class FormulaBaseTecnologiaAdmin(admin.ModelAdmin):
     list_display = ("formula", "medicamento_nombre", "cantidad_formulada", "contrato_asignado", "activo")
+    search_fields = ("formula__codigo_formula", "medicamento_nombre")
+
+
+@admin.register(DetalleRegistroContrato)
+class DetalleRegistroContratoAdmin(admin.ModelAdmin):
+    list_display = (
+        "formula",
+        "medicamento_nombre",
+        "contrato_asignado",
+        "cantidad_formulada",
+        "cantidad_entregada",
+        "numero_entrega_actual",
+        "numero_entregas_programadas",
+        "activo",
+    )
     search_fields = ("formula__codigo_formula", "medicamento_nombre")

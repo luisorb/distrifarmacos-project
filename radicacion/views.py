@@ -240,15 +240,17 @@ class FormulaCreateView(GruposRequeridosMixin, AjaxModelFormMixin, CreateView):
 @grupos_requeridos("digitador", "gestor_calidad", "admin_proyecto")
 def formula_detalle(request, pk):
     formula = get_object_or_404(
-        FormulaBase.objects.select_related("afiliado").prefetch_related("tecnologias", "soportes"),
+        FormulaBase.objects.select_related("afiliado").prefetch_related("tecnologias", "soportes", "detalles_contrato"),
         pk=pk,
     )
     tecnologias = formula.tecnologias.all()
     soportes = formula.soportes.all()
+    detalles_contrato = formula.detalles_contrato.all()
     context = {
         "formula": formula,
         "tecnologias": tecnologias,
         "soportes": soportes,
+        "detalles_contrato": detalles_contrato,
     }
     return render(request, "radicacion/formula_detalle.html", context)
 
@@ -256,7 +258,7 @@ def formula_detalle(request, pk):
 @grupos_requeridos("digitador", "gestor_calidad", "admin_proyecto")
 def editar_formula(request, pk):
     formula = get_object_or_404(
-        FormulaBase.objects.select_related("afiliado").prefetch_related("tecnologias", "soportes"),
+        FormulaBase.objects.select_related("afiliado").prefetch_related("tecnologias", "soportes", "detalles_contrato"),
         pk=pk,
     )
     afiliado = formula.afiliado
@@ -371,6 +373,7 @@ def _editar_context(formula, form, afiliado_display):
         "afiliado_display": afiliado_display,
         "tecnologias_data": tecnologias_data,   # list — serialized by json_script in template
         "soportes_existentes": soportes_existentes,
+        "detalles_contrato": formula.detalles_contrato.all(),
     }
 
 
