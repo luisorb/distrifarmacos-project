@@ -1,16 +1,20 @@
 <!doctype html>
 <html lang="es">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Distrifármacos{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap"
+    rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+    rel="stylesheet">
   <style>
     :root {
       --brand: #0f766e;
@@ -33,7 +37,11 @@
       min-height: 100vh;
     }
 
-    h1, h2, h3, h4, .brand-title {
+    h1,
+    h2,
+    h3,
+    h4,
+    .brand-title {
       font-family: "Space Grotesk", sans-serif;
     }
 
@@ -62,7 +70,9 @@
       padding-bottom: 3rem;
     }
 
-    .app-card, .table-card, .login-card {
+    .app-card,
+    .table-card,
+    .login-card {
       background: rgba(255, 255, 255, 0.94);
       border: 1px solid rgba(216, 226, 232, 0.85);
       border-radius: 8px;
@@ -130,14 +140,14 @@
       opacity: 0.96;
     }
 
-    .btn-action:hover{
-        color: #2547dd;
-        background-color: #3548ee1c;
+    .btn-action:hover {
+      color: #2547dd;
+      background-color: #3548ee1c;
     }
 
-    .btn-action-delete:hover{
-        color: #dc2626;
-        background-color: #ee35351c;
+    .btn-action-delete:hover {
+      color: #dc2626;
+      background-color: #ee35351c;
     }
 
     .icon-btn {
@@ -149,7 +159,9 @@
       padding: 0;
     }
 
-    .text-muted { color: var(--muted) !important; }
+    .text-muted {
+      color: var(--muted) !important;
+    }
 
     .table thead th {
       border-bottom-color: rgba(15, 118, 110, 0.12);
@@ -159,13 +171,15 @@
       letter-spacing: 0.05em;
     }
 
-    .form-control, .form-select {
+    .form-control,
+    .form-select {
       border-radius: 0.9rem;
       border-color: var(--border);
       background-color: #fcfefe;
     }
 
-    .form-control:focus, .form-select:focus {
+    .form-control:focus,
+    .form-select:focus {
       border-color: rgba(15, 118, 110, 0.5);
       box-shadow: 0 0 0 0.2rem rgba(15, 118, 110, 0.12);
     }
@@ -177,17 +191,6 @@
       color: #e8f8f7;
       overflow: hidden;
       position: relative;
-    }
-
-    .hero::after {
-      content: "";
-      position: absolute;
-      inset: auto -4rem -5rem auto;
-      width: 14rem;
-      height: 14rem;
-      border-radius: 50%;
-      background: rgba(249, 115, 22, 0.2);
-      filter: blur(10px);
     }
 
     .hero small {
@@ -250,7 +253,7 @@
     }
 
     .wizard-step.active .wizard-step-label,
-    .wizard-step.done  .wizard-step-label {
+    .wizard-step.done .wizard-step-label {
       color: var(--brand);
       font-weight: 500;
     }
@@ -302,9 +305,14 @@
     }
 
     /* keep remove buttons above the invisible input */
-    .dz-thumb-remove { z-index: 2; position: relative; }
+    .dz-thumb-remove {
+      z-index: 2;
+      position: relative;
+    }
 
-    .dropzone-prompt { pointer-events: none; }
+    .dropzone-prompt {
+      pointer-events: none;
+    }
 
     .dropzone-thumbs {
       display: grid;
@@ -341,7 +349,10 @@
       background: #fff5f5;
     }
 
-    .dz-thumb-pdf i { font-size: 2rem; color: #dc2626; }
+    .dz-thumb-pdf i {
+      font-size: 2rem;
+      color: #dc2626;
+    }
 
     .dz-thumb-name {
       font-size: 0.65rem;
@@ -360,7 +371,7 @@
       width: 1.4rem;
       height: 1.4rem;
       border-radius: 50%;
-      background: rgba(0,0,0,0.55);
+      background: rgba(0, 0, 0, 0.55);
       color: #fff;
       border: none;
       display: flex;
@@ -372,7 +383,9 @@
       transition: opacity 0.15s;
     }
 
-    .dz-thumb:hover .dz-thumb-remove { opacity: 1; }
+    .dz-thumb:hover .dz-thumb-remove {
+      opacity: 1;
+    }
 
     .dz-thumb-size {
       position: absolute;
@@ -380,7 +393,7 @@
       left: 0;
       right: 0;
       padding: 0.15rem 0.35rem;
-      background: rgba(0,0,0,0.45);
+      background: rgba(0, 0, 0, 0.45);
       color: #fff;
       font-size: 0.6rem;
       text-align: center;
@@ -389,7 +402,9 @@
     /* -----------------------------------------------------------------------
        Formula detail — soporte file cards
     ----------------------------------------------------------------------- */
-    .soporte-card { cursor: pointer; }
+    .soporte-card {
+      cursor: pointer;
+    }
 
     .soporte-thumb {
       width: 100%;
@@ -418,12 +433,12 @@
       background-size: cover;
       background-position: center;
     }
-
   </style>
 </head>
+
 <body>
   <nav class="navbar navbar-expand-lg sticky-top">
-    <div class="container py-2">
+    <div class="container">
       <a class="navbar-brand d-flex align-items-center gap-3" href="{% url 'dashboard' %}">
         <span class="brand-badge">Df</span>
         <span>
@@ -435,39 +450,160 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="mainNav">
-        <ul class="navbar-nav ms-auto gap-lg-1 align-items-lg-center">
-          <li class="nav-item"><a class="nav-link" href="{% url 'parametricas:lista' %}">Medicamentos</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'radicacion:lista' %}">Afiliados</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'formula:lista' %}">Fórmulas</a></li>
+        <ul class="navbar-nav ms-auto gap-lg-3 gap-2 align-items-lg-center">
           {% if user.is_authenticated %}
-            <li class="nav-item"><span class="nav-link text-muted">{{ user.get_username }}</span></li>
-            <li class="nav-item ms-lg-2">
-              <form method="post" action="{% url 'logout' %}" class="d-inline">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-sm btn-soft">Salir</button>
-              </form>
-            </li>
+          <li class="nav-item">
+            <div class="d-flex align-items-center gap-2 user-greeting">
+              <div class="user-dot"></div>
+              <span class="user-name">
+                {{ user.first_name }}
+                {% if user.last_name %}
+                {{ user.last_name|slice:":1" }}.
+                {% endif %}
+              </span>
+            </div>
+          </li>
+
+          <li class="nav-item">
+            <form method="post" action="{% url 'logout' %}" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn-logout">
+                Salir
+              </button>
+            </form>
+          </li>
           {% endif %}
         </ul>
       </div>
+
+      <style>
+        /* Reset y estilos base minimalistas */
+        .user-greeting {
+          cursor: default;
+          padding: 6px 12px;
+          border-radius: 40px;
+          transition: all 0.2s ease;
+        }
+
+        /* Punto verde de estado */
+        .user-dot {
+          width: 8px;
+          height: 8px;
+          background-color: #10b981;
+          border-radius: 50%;
+          transition: all 0.2s ease;
+        }
+
+        /* Nombre de usuario */
+        .user-name {
+          font-size: 0.9rem;
+          font-weight: 500;
+          color: #1f2937;
+          letter-spacing: -0.2px;
+          transition: color 0.2s ease;
+        }
+
+        /* Hover en el área de usuario */
+        .user-greeting:hover {
+          background-color: #f3f4f6;
+        }
+
+        .user-greeting:hover .user-dot {
+          transform: scale(1.2);
+          background-color: #059669;
+        }
+
+        .user-greeting:hover .user-name {
+          color: #059669;
+        }
+
+        /* Botón de salir minimalista */
+        .btn-logout {
+          background: transparent;
+          border: 1px solid #e5e7eb;
+          border-radius: 40px;
+          padding: 6px 20px;
+          font-size: 0.85rem;
+          font-weight: 500;
+          color: #6b7280;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          letter-spacing: -0.2px;
+        }
+
+        /* Hover del botón salir */
+        .btn-logout:hover {
+          border-color: #fecaca;
+          background-color: #fef2f2;
+          color: #dc2626;
+          transform: translateY(-1px);
+        }
+
+        .btn-logout:active {
+          transform: translateY(0);
+        }
+
+        /* Versión responsive */
+        @media (max-width: 991.98px) {
+          .navbar-nav {
+            padding-top: 1rem;
+            gap: 0.75rem !important;
+          }
+
+          .user-greeting {
+            justify-content: center;
+            width: 100%;
+            background-color: #fafafa;
+            padding: 10px;
+          }
+
+          .btn-logout {
+            width: 100%;
+            text-align: center;
+            padding: 8px 20px;
+          }
+
+          .user-name {
+            font-size: 0.95rem;
+          }
+        }
+
+        /* Animación sutil al cargar */
+        @keyframes subtleFade {
+          from {
+            opacity: 0;
+            transform: translateY(5px);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .navbar-nav>.nav-item {
+          animation: subtleFade 0.25s ease-out;
+        }
+      </style>
     </div>
   </nav>
 
   <main class="app-shell">
     <div class="container">
       {% if messages %}
-        <div class="mb-4">
-          {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} border-0 shadow-sm" role="alert">{{ message }}</div>
-          {% endfor %}
-        </div>
+      <div class="mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} border-0 shadow-sm" role="alert">{{ message }}</div>
+        {% endfor %}
+      </div>
       {% endif %}
 
       {% block content %}{% endblock %}
     </div>
   </main>
 
-  <div class="modal fade" id="appModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal fade" id="appModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"
+    data-bs-keyboard="false">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-body p-4" id="appModalBody">
@@ -649,8 +785,8 @@
         3: 'Archivos adjuntos',
       };
 
-      function getForm()    { return document.getElementById('form-radicar'); }
-      function getStep()    { return parseInt((getForm() || {}).dataset.wizardStep || '1', 10); }
+      function getForm() { return document.getElementById('form-radicar'); }
+      function getStep() { return parseInt((getForm() || {}).dataset.wizardStep || '1', 10); }
 
       function setStep(next) {
         var form = getForm();
@@ -667,7 +803,7 @@
         modal.querySelectorAll('.wizard-step').forEach(function (dot) {
           var s = parseInt(dot.dataset.step, 10);
           dot.classList.toggle('active', s === next);
-          dot.classList.toggle('done',   s < next);
+          dot.classList.toggle('done', s < next);
         });
         modal.querySelectorAll('.wizard-step-line').forEach(function (line, idx) {
           // line 0 is between step 1 and 2; line 1 is between step 2 and 3
@@ -679,18 +815,18 @@
         if (titleEl) titleEl.textContent = TITLES[next] || '';
 
         // Buttons
-        var btnPrev   = document.getElementById('btn-wizard-prev');
-        var btnNext   = document.getElementById('btn-wizard-next');
+        var btnPrev = document.getElementById('btn-wizard-prev');
+        var btnNext = document.getElementById('btn-wizard-next');
         var btnSubmit = document.getElementById('btn-wizard-submit');
 
-        if (btnPrev)   btnPrev.hidden   = (next === 1);
-        if (btnNext)   btnNext.hidden   = (next === TOTAL);
+        if (btnPrev) btnPrev.hidden = (next === 1);
+        if (btnNext) btnNext.hidden = (next === TOTAL);
         // In edit mode the submit button has no [hidden] attribute initially —
         // it should remain visible on all steps. Only hide it on non-final
         // steps when it was originally hidden (create mode).
         if (btnSubmit) {
           var alwaysVisible = btnSubmit.dataset.wizardAlwaysVisible === 'true' ||
-                              !btnSubmit.hasAttribute('data-wizard-initially-hidden');
+            !btnSubmit.hasAttribute('data-wizard-initially-hidden');
           if (!alwaysVisible) btnSubmit.hidden = (next !== TOTAL);
         }
 
@@ -722,7 +858,7 @@
             if (Array.isArray(preloaded) && preloaded.length > 0) {
               document.dispatchEvent(new CustomEvent('medicamentos:preload', { detail: preloaded }));
             }
-          } catch (e) {}
+          } catch (e) { }
         }
       });
 
@@ -765,7 +901,7 @@
 
       function renderTable() {
         var wrapper = document.getElementById('tabla-medicamentos-wrapper');
-        var tbody   = document.getElementById('tabla-medicamentos-body');
+        var tbody = document.getElementById('tabla-medicamentos-body');
         if (!wrapper || !tbody) return;
 
         tbody.innerHTML = '';
@@ -782,10 +918,10 @@
             '<td>' + escapeHtml(med.cantidad) + '</td>' +
             '<td class="text-muted small">' + escapeHtml(med.info || '—') + '</td>' +
             '<td class="text-center">' +
-              '<button type="button" class="btn btn-sm btn-action-delete icon-btn" ' +
-                'data-med-idx="' + idx + '" title="Eliminar">' +
-                '<i class="bi bi-trash"></i>' +
-              '</button>' +
+            '<button type="button" class="btn btn-sm btn-action-delete icon-btn" ' +
+            'data-med-idx="' + idx + '" title="Eliminar">' +
+            '<i class="bi bi-trash"></i>' +
+            '</button>' +
             '</td>';
           tbody.appendChild(tr);
         });
@@ -817,13 +953,13 @@
       document.addEventListener('click', function (e) {
         if (!e.target.closest('#btn-agregar-med')) return;
 
-        var $sel    = $('#id_medicamento_busqueda');
-        var id      = $sel.val();
-        var label   = $sel.find('option:selected').text().trim();
-        var cantEl  = document.getElementById('id_cantidad');
-        var infoEl  = document.getElementById('id_info_formula_fisica');
+        var $sel = $('#id_medicamento_busqueda');
+        var id = $sel.val();
+        var label = $sel.find('option:selected').text().trim();
+        var cantEl = document.getElementById('id_cantidad');
+        var infoEl = document.getElementById('id_info_formula_fisica');
         var cantidad = parseInt(cantEl ? cantEl.value : '', 10);
-        var info     = infoEl ? infoEl.value.trim() : '';
+        var info = infoEl ? infoEl.value.trim() : '';
 
         if (!id) { alert('Seleccioná un medicamento antes de agregar.'); return; }
         if (!cantidad || cantidad < 1) { alert('Ingresá una cantidad válida.'); return; }
@@ -858,9 +994,9 @@
       var dt = new DataTransfer();
       window._dropzoneDt = dt;  // expose for submit handler
 
-      function getInput()   { return document.getElementById('id_archivos_formula'); }
-      function getThumbs()  { return document.getElementById('dropzone-thumbs'); }
-      function getPrompt()  { return document.getElementById('dropzone-prompt'); }
+      function getInput() { return document.getElementById('id_archivos_formula'); }
+      function getThumbs() { return document.getElementById('dropzone-thumbs'); }
+      function getPrompt() { return document.getElementById('dropzone-prompt'); }
 
       function isValidFile(file) {
         return file.type.startsWith('image/') || file.type === 'application/pdf';
@@ -900,8 +1036,8 @@
 
         var removeBtn =
           '<button type="button" class="dz-thumb-remove" data-dz-remove="' + idx + '" ' +
-            'title="Quitar" aria-label="Quitar ' + escHtml(file.name) + '">' +
-            '<i class="bi bi-x-lg"></i>' +
+          'title="Quitar" aria-label="Quitar ' + escHtml(file.name) + '">' +
+          '<i class="bi bi-x-lg"></i>' +
           '</button>';
 
         var sizeTag = '<div class="dz-thumb-size">' + escHtml(formatSize(file.size)) + '</div>';
@@ -909,8 +1045,8 @@
         if (file.type === 'application/pdf') {
           div.innerHTML =
             '<div class="dz-thumb-pdf">' +
-              '<i class="bi bi-file-earmark-pdf"></i>' +
-              '<div class="dz-thumb-name">' + escHtml(file.name) + '</div>' +
+            '<i class="bi bi-file-earmark-pdf"></i>' +
+            '<div class="dz-thumb-name">' + escHtml(file.name) + '</div>' +
             '</div>' +
             sizeTag + removeBtn;
         } else {
@@ -918,7 +1054,7 @@
           var url = URL.createObjectURL(file);
           div.innerHTML =
             '<img src="' + url + '" alt="' + escHtml(file.name) + '" ' +
-              'onload="URL.revokeObjectURL(this.src)">' +
+            'onload="URL.revokeObjectURL(this.src)">' +
             sizeTag + removeBtn;
         }
         return div;
@@ -926,7 +1062,7 @@
 
       function renderThumbs() {
         var container = getThumbs();
-        var prompt    = getPrompt();
+        var prompt = getPrompt();
         if (!container) return;
 
         container.innerHTML = '';
@@ -950,7 +1086,7 @@
         for (var i = 0; i < fileList.length; i++) {
           var f = fileList[i];
           if (!isValidFile(f)) { alert('Solo se permiten imágenes o PDF. Se ignoró: ' + f.name); continue; }
-          if (isDuplicate(f))  { continue; }
+          if (isDuplicate(f)) { continue; }
           dt.items.add(f);
           added++;
         }
@@ -1020,4 +1156,5 @@
   </script>
   {% block extra_js %}{% endblock %}
 </body>
+
 </html>
