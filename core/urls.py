@@ -4,9 +4,12 @@ from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import TemplateView
 
+from core.views import logout_view
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("accounts/logout/", logout_view, name="logout"),
     path("accounts/", include("django.contrib.auth.urls")),
     path("", TemplateView.as_view(template_name="dashboard.html"), name="dashboard"),
     path("medicamentos/", include(("parametricas.urls", "parametricas"), namespace="parametricas")),

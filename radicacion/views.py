@@ -9,7 +9,7 @@ from django.urls import reverse, reverse_lazy
 from django.views.decorators.http import require_GET, require_POST
 from django.views.generic import CreateView, ListView, UpdateView
 
-from core.utils import is_ajax_request
+from core.utils import GruposRequeridosMixin, grupos_requeridos, is_ajax_request
 from parametricas.models import Medicamento
 
 from .forms import AfiliadoForm, FormulaBaseForm, SoporteForm, TecnologiaForm
@@ -43,7 +43,8 @@ class AjaxModelFormMixin:
         return redirect(self.get_success_url())
 
 
-class AfiliadoListView(ListView):
+class AfiliadoListView(GruposRequeridosMixin, ListView):
+    grupos_requeridos = ("digitador", "gestor_calidad", "admin_proyecto")
     model = Afiliado
     template_name = "radicacion/afiliado_lista.html"
     context_object_name = "afiliados"
@@ -75,7 +76,8 @@ class AfiliadoListView(ListView):
         return context
 
 
-class AfiliadoCreateView(AjaxModelFormMixin, CreateView):
+class AfiliadoCreateView(GruposRequeridosMixin, AjaxModelFormMixin, CreateView):
+    grupos_requeridos = ("digitador", "gestor_calidad", "admin_proyecto")
     model = Afiliado
     form_class = AfiliadoForm
     template_name = "radicacion/afiliado_modal_form.html"
@@ -83,7 +85,8 @@ class AfiliadoCreateView(AjaxModelFormMixin, CreateView):
     success_url = reverse_lazy("radicacion:lista")
 
 
-class AfiliadoUpdateView(AjaxModelFormMixin, UpdateView):
+class AfiliadoUpdateView(GruposRequeridosMixin, AjaxModelFormMixin, UpdateView):
+    grupos_requeridos = ("digitador", "gestor_calidad", "admin_proyecto")
     model = Afiliado
     form_class = AfiliadoForm
     template_name = "radicacion/afiliado_modal_form.html"
@@ -91,6 +94,7 @@ class AfiliadoUpdateView(AjaxModelFormMixin, UpdateView):
     success_url = reverse_lazy("radicacion:lista")
 
 
+@grupos_requeridos("digitador", "gestor_calidad", "admin_proyecto")
 @require_POST
 def afiliado_eliminar(request, pk):
     afiliado = get_object_or_404(Afiliado, pk=pk)
@@ -100,6 +104,7 @@ def afiliado_eliminar(request, pk):
     return redirect("radicacion:lista")
 
 
+@grupos_requeridos("digitador", "gestor_calidad", "admin_proyecto")
 def radicar_formula(request):
     initial = {}
     afiliado_id = request.GET.get("afiliado") or request.POST.get("afiliado_id_hidden")
@@ -188,7 +193,8 @@ def radicar_formula(request):
     })
 
 
-class FormulaListView(ListView):
+class FormulaListView(GruposRequeridosMixin, ListView):
+    grupos_requeridos = ("digitador", "gestor_calidad", "admin_proyecto")
     model = FormulaBase
     template_name = "radicacion/formula_lista.html"
     context_object_name = "formulas"
@@ -222,7 +228,8 @@ class FormulaListView(ListView):
         return context
 
 
-class FormulaCreateView(AjaxModelFormMixin, CreateView):
+class FormulaCreateView(GruposRequeridosMixin, AjaxModelFormMixin, CreateView):
+    grupos_requeridos = ("digitador", "gestor_calidad", "admin_proyecto")
     model = FormulaBase
     form_class = FormulaBaseForm
     template_name = "radicacion/formula_form.html"
@@ -230,6 +237,7 @@ class FormulaCreateView(AjaxModelFormMixin, CreateView):
     success_url = reverse_lazy("formula:lista")
 
 
+@grupos_requeridos("digitador", "gestor_calidad", "admin_proyecto")
 def formula_detalle(request, pk):
     formula = get_object_or_404(
         FormulaBase.objects.select_related("afiliado").prefetch_related("tecnologias", "soportes"),
@@ -245,6 +253,7 @@ def formula_detalle(request, pk):
     return render(request, "radicacion/formula_detalle.html", context)
 
 
+@grupos_requeridos("digitador", "gestor_calidad", "admin_proyecto")
 def editar_formula(request, pk):
     formula = get_object_or_404(
         FormulaBase.objects.select_related("afiliado").prefetch_related("tecnologias", "soportes"),
@@ -258,9 +267,14 @@ def editar_formula(request, pk):
         if form.is_valid():
             try:
                 with transaction.atomic():
-                    updated = form.save(commit=False)
-                    updated.afiliado_id = formula.afiliado_id
-                    updated.save()
+                    FormulaBase.objects.filter(pk=formula.pk).update(
+                        medico=form.cleaned_data.get("medico", ""),
+                        institucion=form.cleaned_data.get("institucion", ""),
+                        fecha_formula=form.cleaned_data.get("fecha_formula"),
+                        observaciones=form.cleaned_data.get("observaciones", ""),
+                        activo=form.cleaned_data.get("activo", True),
+                    )
+                    formula.refresh_from_db()
 
                     medicamentos_raw = request.POST.get("medicamentos_json", "[]")
                     try:
@@ -292,19 +306,23 @@ def editar_formula(request, pk):
                             usuario_carga=request.user if request.user.is_authenticated else None,
                         )
 
+                # Success — return outside the transaction so any commit errors are caught
+                if is_ajax_request(request):
+                    return JsonResponse({
+                        "ok": True,
+                        "redirect_url": reverse("formula:detalle", kwargs={"pk": formula.pk}),
+                    })
+                messages.success(request, f"Formula {formula.codigo_formula} actualizada.")
+                return redirect("formula:detalle", pk=formula.pk)
+
             except Exception as exc:
                 if is_ajax_request(request):
                     return JsonResponse({"ok": False, "error": str(exc)}, status=500)
                 messages.error(request, f"Error al guardar: {exc}")
+                return render(request, "radicacion/formula_editar_modal.html",
+                              _editar_context(formula, form, afiliado_display))
 
-            if is_ajax_request(request):
-                return JsonResponse({
-                    "ok": True,
-                    "redirect_url": reverse("formula:detalle", kwargs={"pk": formula.pk}),
-                })
-            messages.success(request, f"Formula {formula.codigo_formula} actualizada.")
-            return redirect("formula:detalle", pk=formula.pk)
-
+        # Form invalid
         if is_ajax_request(request):
             html = render_to_string(
                 "radicacion/formula_editar_modal.html",
@@ -312,9 +330,14 @@ def editar_formula(request, pk):
                 request=request,
             )
             return HttpResponse(html, status=422)
+        return render(request, "radicacion/formula_editar_modal.html",
+                      _editar_context(formula, form, afiliado_display), status=400)
 
     else:
-        initial = {"afiliado": afiliado_display}
+        initial = {
+            "afiliado": afiliado_display,
+            "fecha_formula": formula.fecha_formula,
+        }
         form = FormulaBaseForm(instance=formula, initial=initial)
 
     context = _editar_context(formula, form, afiliado_display)
@@ -351,6 +374,7 @@ def _editar_context(formula, form, afiliado_display):
     }
 
 
+@grupos_requeridos("digitador", "gestor_calidad", "admin_proyecto")
 @require_POST
 def formula_eliminar(request, pk):
     formula = get_object_or_404(FormulaBase, pk=pk)
@@ -360,13 +384,9 @@ def formula_eliminar(request, pk):
     return redirect("formula:lista")
 
 
+@grupos_requeridos("digitador", "gestor_calidad", "admin_proyecto")
 @require_POST
 def formula_agregar_tecnologia(request, pk):
-    formula = get_object_or_404(FormulaBase, pk=pk)
-    formula.delete()
-    if is_ajax_request(request):
-        return JsonResponse({"ok": True})
-    return redirect("formula:lista")
     formula = get_object_or_404(FormulaBase, pk=pk)
     form = TecnologiaForm(request.POST)
     if form.is_valid():
@@ -389,6 +409,7 @@ def formula_agregar_tecnologia(request, pk):
     )
 
 
+@grupos_requeridos("digitador", "gestor_calidad", "admin_proyecto")
 @require_POST
 def cargar_soporte(request, pk):
     formula = get_object_or_404(FormulaBase, pk=pk)
@@ -417,6 +438,7 @@ def cargar_soporte(request, pk):
     )
 
 
+@grupos_requeridos("digitador", "gestor_calidad", "admin_proyecto")
 @require_GET
 def buscar_medicamento(request):
     query = request.GET.get("q", "").strip()

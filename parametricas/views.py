@@ -5,7 +5,7 @@ from django.urls import reverse, reverse_lazy
 from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, ListView, UpdateView
 
-from core.utils import is_ajax_request
+from core.utils import GruposRequeridosMixin, grupos_requeridos, is_ajax_request
 
 from .forms import MedicamentoForm
 from .models import Medicamento
@@ -38,7 +38,8 @@ class AjaxModelFormMixin:
         return redirect(self.get_success_url())
 
 
-class MedicamentoListView(ListView):
+class MedicamentoListView(GruposRequeridosMixin, ListView):
+    grupos_requeridos = ("digitador", "gestor_calidad", "admin_proyecto")
     model = Medicamento
     template_name = "parametricas/medicamento_lista.html"
     context_object_name = "medicamentos"
@@ -67,7 +68,8 @@ class MedicamentoListView(ListView):
         return context
 
 
-class MedicamentoCreateView(AjaxModelFormMixin, CreateView):
+class MedicamentoCreateView(GruposRequeridosMixin, AjaxModelFormMixin, CreateView):
+    grupos_requeridos = ("digitador", "gestor_calidad", "admin_proyecto")
     model = Medicamento
     form_class = MedicamentoForm
     template_name = "parametricas/medicamento_form.html"
@@ -75,7 +77,8 @@ class MedicamentoCreateView(AjaxModelFormMixin, CreateView):
     success_url = reverse_lazy("parametricas:lista")
 
 
-class MedicamentoUpdateView(AjaxModelFormMixin, UpdateView):
+class MedicamentoUpdateView(GruposRequeridosMixin, AjaxModelFormMixin, UpdateView):
+    grupos_requeridos = ("digitador", "gestor_calidad", "admin_proyecto")
     model = Medicamento
     form_class = MedicamentoForm
     template_name = "parametricas/medicamento_form.html"
@@ -83,6 +86,7 @@ class MedicamentoUpdateView(AjaxModelFormMixin, UpdateView):
     success_url = reverse_lazy("parametricas:lista")
 
 
+@grupos_requeridos("digitador", "gestor_calidad", "admin_proyecto")
 @require_POST
 def medicamento_eliminar(request, pk):
     medicamento = get_object_or_404(Medicamento, pk=pk)

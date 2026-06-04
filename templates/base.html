@@ -441,7 +441,12 @@
           <li class="nav-item"><a class="nav-link" href="{% url 'formula:lista' %}">Fórmulas</a></li>
           {% if user.is_authenticated %}
             <li class="nav-item"><span class="nav-link text-muted">{{ user.get_username }}</span></li>
-            <li class="nav-item"><a class="btn btn-sm btn-soft ms-lg-2" href="{% url 'logout' %}">Salir</a></li>
+            <li class="nav-item ms-lg-2">
+              <form method="post" action="{% url 'logout' %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-soft">Salir</button>
+              </form>
+            </li>
           {% endif %}
         </ul>
       </div>
@@ -585,16 +590,17 @@
       }
       event.preventDefault();
 
-      // Build FormData manually so programmatically-assigned file inputs
-      // (managed by the DataTransfer-backed dropzone) are included reliably
-      // across all browsers. Assigning to input.files via DataTransfer is not
-      // always picked up by new FormData(form).
       const fd = new FormData(form);
+
+      // Always inject medicamentos_json from the global array directly —
+      // do NOT rely on the hidden input .value which may not be synced
+      // reliably across all browsers after innerHTML injection.
+      fd.delete('medicamentos_json');
+      fd.append('medicamentos_json', JSON.stringify(window._medicamentosRadicar || []));
 
       // If the dropzone has files, append them directly from the DataTransfer
       // object rather than relying on the <input> FileList.
       if (window._dropzoneDt && window._dropzoneDt.files.length > 0) {
-        // Remove the (possibly empty) entry added by FormData from the <input>
         fd.delete('archivos_formula');
         for (let i = 0; i < window._dropzoneDt.files.length; i++) {
           fd.append('archivos_formula', window._dropzoneDt.files[i]);
@@ -740,9 +746,9 @@
     // Uses event delegation on #appModalBody so it works after innerHTML injection.
     // ---------------------------------------------------------------------------
     (function () {
-      var medicamentos = [];
-
-      function getBody() { return document.getElementById('appModalBody'); }
+      // Exposed globally so the submit handler can read it directly,
+      // bypassing any hidden-input sync issues.
+      window._medicamentosRadicar = [];
 
       function escapeHtml(str) {
         return String(str)
@@ -754,7 +760,7 @@
 
       function syncHidden() {
         var el = document.getElementById('id_medicamentos_json');
-        if (el) el.value = JSON.stringify(medicamentos);
+        if (el) el.value = JSON.stringify(window._medicamentosRadicar);
       }
 
       function renderTable() {
@@ -763,13 +769,13 @@
         if (!wrapper || !tbody) return;
 
         tbody.innerHTML = '';
-        if (medicamentos.length === 0) {
+        if (window._medicamentosRadicar.length === 0) {
           wrapper.style.display = 'none';
           return;
         }
 
         wrapper.style.display = '';
-        medicamentos.forEach(function (med, idx) {
+        window._medicamentosRadicar.forEach(function (med, idx) {
           var tr = document.createElement('tr');
           tr.innerHTML =
             '<td>' + escapeHtml(med.label) + '</td>' +
@@ -787,12 +793,15 @@
 
       // Reset state when the modal is opened fresh
       document.getElementById('appModal').addEventListener('show.bs.modal', function () {
-        medicamentos = [];
+        window._medicamentosRadicar = [];
+        // Also clear the hidden field if it exists
+        var el = document.getElementById('id_medicamentos_json');
+        if (el) el.value = '[]';
       });
 
       // Pre-populate from existing data when editing a formula
       document.addEventListener('medicamentos:preload', function (e) {
-        medicamentos = (e.detail || []).map(function (item) {
+        window._medicamentosRadicar = (e.detail || []).map(function (item) {
           return {
             id: String(item.id),
             label: item.label || item.medicamento_nombre || '',
@@ -819,7 +828,7 @@
         if (!id) { alert('Seleccioná un medicamento antes de agregar.'); return; }
         if (!cantidad || cantidad < 1) { alert('Ingresá una cantidad válida.'); return; }
 
-        medicamentos.push({ id: id, label: label, cantidad: cantidad, info: info });
+        window._medicamentosRadicar.push({ id: id, label: label, cantidad: cantidad, info: info });
         syncHidden();
         renderTable();
 
@@ -833,7 +842,7 @@
         var btn = e.target.closest('[data-med-idx]');
         if (!btn) return;
         var idx = parseInt(btn.dataset.medIdx, 10);
-        medicamentos.splice(idx, 1);
+        window._medicamentosRadicar.splice(idx, 1);
         syncHidden();
         renderTable();
       });

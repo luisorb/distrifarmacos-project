@@ -26,14 +26,21 @@ class FormulaBaseForm(forms.ModelForm):
             "afiliado": forms.TextInput(attrs={"class": "form-control", "placeholder": "afiliado", "readonly": "readonly"}),
             "medico": forms.TextInput(attrs={"class": "form-control", "placeholder": "Nombre del médico que formula"}),
             "institucion": forms.TextInput(attrs={"class": "form-control", "placeholder": "Institución a la que se dirige la fórmula"}),
-            "fecha_formula": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "fecha_formula": forms.DateInput(
+                attrs={"class": "form-control", "type": "date"},
+                format="%Y-%m-%d",
+            ),
             "observaciones": forms.Textarea(attrs={"class": "form-control", "rows": 3, "style": "resize:none;", "placeholder": "Observaciones adicionales sobre la fórmula"}),
             "activo": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
         
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
+        # Force YYYY-MM-DD format for date inputs — HTML date inputs always
+        # submit in this format regardless of locale.
+        self.fields["fecha_formula"].input_formats = ["%Y-%m-%d"]
+
         # Reemplazamos el ModelChoiceField por un CharField usando el mismo widget ya renderizado
         # Así evitamos que busque IDs numéricos en el POST
         widget_afiliado = self.fields['afiliado'].widget
