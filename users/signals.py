@@ -3,7 +3,7 @@ from django.db.models.signals import post_migrate
 from django.dispatch import receiver
 
 
-BASE_GROUPS = ("digitador", "gestor_calidad", "admin_proyecto")
+BASE_GROUPS = ("Digitador",)
 
 
 @receiver(post_migrate)

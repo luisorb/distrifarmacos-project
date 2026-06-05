@@ -39,7 +39,7 @@ class AjaxModelFormMixin:
 
 
 class MedicamentoListView(GruposRequeridosMixin, ListView):
-    grupos_requeridos = ("digitador", "gestor_calidad", "admin_proyecto")
+    grupos_requeridos = ("Digitador",)
     model = Medicamento
     template_name = "parametricas/medicamento_lista.html"
     context_object_name = "medicamentos"
@@ -69,7 +69,7 @@ class MedicamentoListView(GruposRequeridosMixin, ListView):
 
 
 class MedicamentoCreateView(GruposRequeridosMixin, AjaxModelFormMixin, CreateView):
-    grupos_requeridos = ("digitador", "gestor_calidad", "admin_proyecto")
+    grupos_requeridos = ("Digitador",)
     model = Medicamento
     form_class = MedicamentoForm
     template_name = "parametricas/medicamento_form.html"
@@ -78,7 +78,7 @@ class MedicamentoCreateView(GruposRequeridosMixin, AjaxModelFormMixin, CreateVie
 
 
 class MedicamentoUpdateView(GruposRequeridosMixin, AjaxModelFormMixin, UpdateView):
-    grupos_requeridos = ("digitador", "gestor_calidad", "admin_proyecto")
+    grupos_requeridos = ("Digitador",)
     model = Medicamento
     form_class = MedicamentoForm
     template_name = "parametricas/medicamento_form.html"
@@ -86,7 +86,7 @@ class MedicamentoUpdateView(GruposRequeridosMixin, AjaxModelFormMixin, UpdateVie
     success_url = reverse_lazy("parametricas:lista")
 
 
-@grupos_requeridos("digitador", "gestor_calidad", "admin_proyecto")
+@grupos_requeridos("Digitador",)
 @require_POST
 def medicamento_eliminar(request, pk):
     medicamento = get_object_or_404(Medicamento, pk=pk)

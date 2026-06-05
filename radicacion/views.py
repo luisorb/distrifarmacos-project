@@ -44,7 +44,7 @@ class AjaxModelFormMixin:
 
 
 class AfiliadoListView(GruposRequeridosMixin, ListView):
-    grupos_requeridos = ("digitador", "gestor_calidad", "admin_proyecto")
+    grupos_requeridos = ("Digitador",)
     model = Afiliado
     template_name = "radicacion/afiliado_lista.html"
     context_object_name = "afiliados"
@@ -77,7 +77,7 @@ class AfiliadoListView(GruposRequeridosMixin, ListView):
 
 
 class AfiliadoCreateView(GruposRequeridosMixin, AjaxModelFormMixin, CreateView):
-    grupos_requeridos = ("digitador", "gestor_calidad", "admin_proyecto")
+    grupos_requeridos = ("Digitador",)
     model = Afiliado
     form_class = AfiliadoForm
     template_name = "radicacion/afiliado_modal_form.html"
@@ -86,7 +86,7 @@ class AfiliadoCreateView(GruposRequeridosMixin, AjaxModelFormMixin, CreateView):
 
 
 class AfiliadoUpdateView(GruposRequeridosMixin, AjaxModelFormMixin, UpdateView):
-    grupos_requeridos = ("digitador", "gestor_calidad", "admin_proyecto")
+    grupos_requeridos = ("Digitador",)
     model = Afiliado
     form_class = AfiliadoForm
     template_name = "radicacion/afiliado_modal_form.html"
@@ -94,7 +94,7 @@ class AfiliadoUpdateView(GruposRequeridosMixin, AjaxModelFormMixin, UpdateView):
     success_url = reverse_lazy("radicacion:lista")
 
 
-@grupos_requeridos("digitador", "gestor_calidad", "admin_proyecto")
+@grupos_requeridos("Digitador",)
 @require_POST
 def afiliado_eliminar(request, pk):
     afiliado = get_object_or_404(Afiliado, pk=pk)
@@ -104,7 +104,7 @@ def afiliado_eliminar(request, pk):
     return redirect("radicacion:lista")
 
 
-@grupos_requeridos("digitador", "gestor_calidad", "admin_proyecto")
+@grupos_requeridos("Digitador",)
 def radicar_formula(request):
     initial = {}
     afiliado_id = request.GET.get("afiliado") or request.POST.get("afiliado_id_hidden")
@@ -194,7 +194,7 @@ def radicar_formula(request):
 
 
 class FormulaListView(GruposRequeridosMixin, ListView):
-    grupos_requeridos = ("digitador", "gestor_calidad", "admin_proyecto")
+    grupos_requeridos = ("Digitador",)
     model = FormulaBase
     template_name = "radicacion/formula_lista.html"
     context_object_name = "formulas"
@@ -229,7 +229,7 @@ class FormulaListView(GruposRequeridosMixin, ListView):
 
 
 class FormulaCreateView(GruposRequeridosMixin, AjaxModelFormMixin, CreateView):
-    grupos_requeridos = ("digitador", "gestor_calidad", "admin_proyecto")
+    grupos_requeridos = ("Digitador",)
     model = FormulaBase
     form_class = FormulaBaseForm
     template_name = "radicacion/formula_form.html"
@@ -237,7 +237,7 @@ class FormulaCreateView(GruposRequeridosMixin, AjaxModelFormMixin, CreateView):
     success_url = reverse_lazy("formula:lista")
 
 
-@grupos_requeridos("digitador", "gestor_calidad", "admin_proyecto")
+@grupos_requeridos("Digitador",)
 def formula_detalle(request, pk):
     formula = get_object_or_404(
         FormulaBase.objects.select_related("afiliado").prefetch_related("tecnologias", "soportes", "detalles_contrato"),
@@ -255,7 +255,7 @@ def formula_detalle(request, pk):
     return render(request, "radicacion/formula_detalle.html", context)
 
 
-@grupos_requeridos("digitador", "gestor_calidad", "admin_proyecto")
+@grupos_requeridos("Digitador",)
 def editar_formula(request, pk):
     formula = get_object_or_404(
         FormulaBase.objects.select_related("afiliado").prefetch_related("tecnologias", "soportes", "detalles_contrato"),
@@ -377,7 +377,7 @@ def _editar_context(formula, form, afiliado_display):
     }
 
 
-@grupos_requeridos("digitador", "gestor_calidad", "admin_proyecto")
+@grupos_requeridos("Digitador",)
 @require_POST
 def formula_eliminar(request, pk):
     formula = get_object_or_404(FormulaBase, pk=pk)
@@ -387,7 +387,7 @@ def formula_eliminar(request, pk):
     return redirect("formula:lista")
 
 
-@grupos_requeridos("digitador", "gestor_calidad", "admin_proyecto")
+@grupos_requeridos("Digitador",)
 @require_POST
 def formula_agregar_tecnologia(request, pk):
     formula = get_object_or_404(FormulaBase, pk=pk)
@@ -412,7 +412,7 @@ def formula_agregar_tecnologia(request, pk):
     )
 
 
-@grupos_requeridos("digitador", "gestor_calidad", "admin_proyecto")
+@grupos_requeridos("Digitador",)
 @require_POST
 def cargar_soporte(request, pk):
     formula = get_object_or_404(FormulaBase, pk=pk)
@@ -441,7 +441,7 @@ def cargar_soporte(request, pk):
     )
 
 
-@grupos_requeridos("digitador", "gestor_calidad", "admin_proyecto")
+@grupos_requeridos("Digitador",)
 @require_GET
 def buscar_medicamento(request):
     query = request.GET.get("q", "").strip()
