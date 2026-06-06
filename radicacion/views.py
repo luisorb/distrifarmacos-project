@@ -167,10 +167,7 @@ def radicar_formula(request):
                 return render(request, template, {"form": form, "desde_afiliados": True, "afiliado_id": afiliado_id})
 
             if is_ajax_request(request):
-                return JsonResponse({
-                    "ok": True,
-                    "redirect_url": reverse("formula:detalle", kwargs={"pk": formula.pk}),
-                })
+                return JsonResponse({"ok": True})
             messages.success(request, f"Formula {formula.codigo_formula} creada.")
             return redirect("formula:detalle", pk=formula.pk)
         else:
@@ -236,21 +233,60 @@ class FormulaCreateView(GruposRequeridosMixin, AjaxModelFormMixin, CreateView):
     ajax_template_name = "radicacion/formula_modal_form.html"
     success_url = reverse_lazy("formula:lista")
 
+    def form_valid(self, form):
+        afiliado_id = self.request.POST.get("afiliado_id_hidden")
+        with transaction.atomic():
+            self.object = form.save(commit=False)
+            if afiliado_id:
+                self.object.afiliado_id = afiliado_id
+            self.object.save()
+
+            medicamentos_raw = self.request.POST.get("medicamentos_json", "[]")
+            try:
+                medicamentos_lista = json.loads(medicamentos_raw)
+            except (ValueError, TypeError):
+                medicamentos_lista = []
+
+            for item in medicamentos_lista:
+                try:
+                    med_id = int(item.get("id", 0))
+                    cantidad = int(item.get("cantidad", 0))
+                    if med_id and cantidad > 0:
+                        FormulaBaseTecnologia.objects.create(
+                            formula=self.object,
+                            medicamento_id=med_id,
+                            cantidad_formulada=cantidad,
+                            indicaciones=item.get("info", ""),
+                        )
+                except (ValueError, TypeError, Medicamento.DoesNotExist):
+                    continue
+
+            archivos = self.request.FILES.getlist("archivos_formula")
+            for archivo in archivos:
+                SoporteFormulaBase.objects.create(
+                    formula_base=self.object,
+                    archivo=archivo,
+                    tipo_soporte="PRESCRIPCION",
+                    usuario_carga=self.request.user if self.request.user.is_authenticated else None,
+                )
+
+        if is_ajax_request(self.request):
+            return JsonResponse({"ok": True})
+        return redirect(self.get_success_url())
+
 
 @grupos_requeridos("Digitador",)
 def formula_detalle(request, pk):
     formula = get_object_or_404(
-        FormulaBase.objects.select_related("afiliado").prefetch_related("tecnologias", "soportes", "detalles_contrato"),
+        FormulaBase.objects.select_related("afiliado").prefetch_related("tecnologias", "soportes"),
         pk=pk,
     )
     tecnologias = formula.tecnologias.all()
     soportes = formula.soportes.all()
-    detalles_contrato = formula.detalles_contrato.all()
     context = {
         "formula": formula,
         "tecnologias": tecnologias,
         "soportes": soportes,
-        "detalles_contrato": detalles_contrato,
     }
     return render(request, "radicacion/formula_detalle.html", context)
 
@@ -258,7 +294,7 @@ def formula_detalle(request, pk):
 @grupos_requeridos("Digitador",)
 def editar_formula(request, pk):
     formula = get_object_or_404(
-        FormulaBase.objects.select_related("afiliado").prefetch_related("tecnologias", "soportes", "detalles_contrato"),
+        FormulaBase.objects.select_related("afiliado").prefetch_related("tecnologias", "soportes"),
         pk=pk,
     )
     afiliado = formula.afiliado
@@ -310,10 +346,7 @@ def editar_formula(request, pk):
 
                 # Success — return outside the transaction so any commit errors are caught
                 if is_ajax_request(request):
-                    return JsonResponse({
-                        "ok": True,
-                        "redirect_url": reverse("formula:detalle", kwargs={"pk": formula.pk}),
-                    })
+                    return JsonResponse({"ok": True})
                 messages.success(request, f"Formula {formula.codigo_formula} actualizada.")
                 return redirect("formula:detalle", pk=formula.pk)
 
@@ -371,9 +404,8 @@ def _editar_context(formula, form, afiliado_display):
         "formula": formula,
         "form": form,
         "afiliado_display": afiliado_display,
-        "tecnologias_data": tecnologias_data,   # list — serialized by json_script in template
+        "tecnologias_data": tecnologias_data,
         "soportes_existentes": soportes_existentes,
-        "detalles_contrato": formula.detalles_contrato.all(),
     }
 
 
