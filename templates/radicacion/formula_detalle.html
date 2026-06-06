@@ -94,49 +94,6 @@
     {% endif %}
   </section>
 
-  <section class="app-card p-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h2 class="h6 text-uppercase text-muted fw-semibold mb-0">Registros contractuales derivados</h2>
-      <span class="badge text-bg-light border">{{ detalles_contrato.count }}</span>
-    </div>
-    {% if detalles_contrato %}
-    <div class="table-responsive">
-      <table class="table table-sm align-middle mb-0">
-        <thead>
-          <tr>
-            <th>Medicamento</th>
-            <th>Contrato</th>
-            <th>Tipo entrega</th>
-            <th>Cant. solicitada</th>
-            <th>Cant. entregada</th>
-            <th>Entrega</th>
-            <th>Observación</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for detalle in detalles_contrato %}
-          <tr>
-            <td>{{ detalle.medicamento_nombre }}</td>
-            <td>
-              <span class="badge {% if detalle.contrato_asignado == 'CAPITA' %}text-bg-info{% else %}text-bg-warning{% endif %}">
-                {{ detalle.contrato_asignado }}
-              </span>
-            </td>
-            <td>{{ detalle.get_tipo_entrega_display }}</td>
-            <td>{{ detalle.cantidad_solicitada }}</td>
-            <td>{{ detalle.cantidad_entregada }}</td>
-            <td>{{ detalle.numero_entrega_actual }}/{{ detalle.numero_entregas_programadas }}</td>
-            <td class="text-muted small">{{ detalle.observacion|default:"—" }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    {% else %}
-    <p class="text-muted mb-0">No se generaron registros contractuales derivados.</p>
-    {% endif %}
-  </section>
-
   <!-- Archivos adjuntos -->
   <section class="app-card p-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
