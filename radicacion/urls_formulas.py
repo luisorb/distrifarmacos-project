@@ -17,5 +17,7 @@ urlpatterns = [
     path("<int:pk>/eliminar/", views.formula_eliminar, name="eliminar"),
     path("<int:pk>/tecnologia/", views.formula_agregar_tecnologia, name="agregar_tecnologia"),
     path("<int:pk>/soporte/", views.cargar_soporte, name="cargar_soporte"),
+    path("radicar/", views.radicar_formula, name="radicar"),
     path("api/medicamentos/", views.buscar_medicamento, name="api_medicamentos"),
+    path("api/afiliados/", views.buscar_afiliado, name="api_afiliados"),
 ]

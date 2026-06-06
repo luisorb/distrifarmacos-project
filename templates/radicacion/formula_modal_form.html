@@ -26,16 +26,24 @@
 		novalidate>
 		{% csrf_token %}
 		{{ form.non_field_errors }}
-		<input type="hidden" name="afiliado_id_hidden" value="{{ afiliado_id|default:'' }}">
+		<input type="hidden" name="afiliado_id_hidden" id="id_afiliado_id_hidden" value="{{ afiliado_id|default:'' }}">
+		{% if desde_afiliados %}<input type="hidden" name="desde_afiliados" value="1">{% endif %}
 		<input type="hidden" name="medicamentos_json" id="id_medicamentos_json" value="[]">
 
 		<div class="wizard-panel" data-panel="1">
 			<div class="row g-3">
+				{% if desde_afiliados %}
 				<div class="col-md-6">
 					<label class="form-label" for="{{ form.afiliado.id_for_label }}">Afiliado</label>
 					{{ form.afiliado }}
 					{{ form.afiliado.errors }}
 				</div>
+				{% else %}
+				<div class="col-12">
+					<label class="form-label" for="id_afiliado_busqueda">Afiliado</label>
+					<select id="id_afiliado_busqueda" class="form-select" data-afiliado-select="true"></select>
+				</div>
+				{% endif %}
 				<div class="col-md-6">
 					<label class="form-label" for="{{ form.medico.id_for_label }}">Médico</label>
 					{{ form.medico }}

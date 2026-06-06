@@ -106,6 +106,7 @@ def afiliado_eliminar(request, pk):
 
 @grupos_requeridos("Digitador",)
 def radicar_formula(request):
+    desde_afiliados = "afiliado" in request.GET or request.POST.get("desde_afiliados") == "1"
     initial = {}
     afiliado_id = request.GET.get("afiliado") or request.POST.get("afiliado_id_hidden")
     if afiliado_id:
@@ -164,7 +165,7 @@ def radicar_formula(request):
                 messages.error(request, f"Error al guardar la fórmula: {exc}")
                 form = FormulaBaseForm(request.POST, initial=initial)
                 template = "radicacion/formula_modal_form.html" if is_ajax_request(request) else "radicacion/formula_form.html"
-                return render(request, template, {"form": form, "desde_afiliados": True, "afiliado_id": afiliado_id})
+                return render(request, template, {"form": form, "desde_afiliados": desde_afiliados, "afiliado_id": afiliado_id})
 
             if is_ajax_request(request):
                 return JsonResponse({"ok": True})
@@ -175,7 +176,7 @@ def radicar_formula(request):
             if is_ajax_request(request):
                 html = render_to_string(
                     "radicacion/formula_modal_form.html",
-                    {"form": form, "desde_afiliados": True, "afiliado_id": afiliado_id},
+                    {"form": form, "desde_afiliados": desde_afiliados, "afiliado_id": afiliado_id},
                     request=request,
                 )
                 return HttpResponse(html, status=422)
@@ -185,7 +186,7 @@ def radicar_formula(request):
     template = "radicacion/formula_modal_form.html" if is_ajax_request(request) else "radicacion/formula_form.html"
     return render(request, template, {
         "form": form,
-        "desde_afiliados": True,
+        "desde_afiliados": desde_afiliados,
         "afiliado_id": afiliado_id,
     })
 
@@ -488,5 +489,23 @@ def buscar_medicamento(request):
     resultados = [
         {"id": medicamento.pk, "text": f"{medicamento.cum} - {medicamento.nombre_generico} {medicamento.concentracion}"}
         for medicamento in medicamentos.order_by("nombre_generico", "cum")[:10]
+    ]
+    return JsonResponse({"results": resultados})
+
+
+@grupos_requeridos("Digitador",)
+@require_GET
+def buscar_afiliado(request):
+    query = request.GET.get("q", "").strip()
+    afiliados = Afiliado.objects.all()
+    if query:
+        afiliados = afiliados.filter(
+            Q(numero_documento__icontains=query)
+            | Q(nombres__icontains=query)
+            | Q(apellidos__icontains=query)
+        )
+    resultados = [
+        {"id": a.pk, "text": f"{a.numero_documento} - {a.nombres} {a.apellidos}"}
+        for a in afiliados.order_by("apellidos", "nombres")[:15]
     ]
     return JsonResponse({"results": resultados})

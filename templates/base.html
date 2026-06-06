@@ -681,9 +681,52 @@
       });
     }
 
+    // ---------------------------------------------------------------------------
+    // Select2 — affiliate search (for radicar formula desde formulas module)
+    // ---------------------------------------------------------------------------
+    function initAfiliadoSelect(root) {
+      $(root).find('select[data-afiliado-select]').each(function () {
+        if ($(this).hasClass('select2-hidden-accessible')) return;
+        var $modal = $(this).closest('.modal');
+        var dropdownParent = $modal.length ? $modal : $(document.body);
+        $(this).select2({
+          theme: 'bootstrap-5',
+          placeholder: 'Buscar afiliado por nombre o documento...',
+          allowClear: true,
+          minimumInputLength: 2,
+          dropdownParent: dropdownParent,
+          language: {
+            inputTooShort: function () { return 'Escribí al menos 2 caracteres para buscar'; },
+            searching: function () { return 'Buscando...'; },
+            noResults: function () { return 'No se encontraron afiliados'; },
+            loadingMore: function () { return 'Cargando más resultados...'; },
+          },
+          ajax: {
+            url: '/formula/api/afiliados/',
+            dataType: 'json',
+            delay: 300,
+            data: function (params) {
+              return { q: params.term };
+            },
+            processResults: function (data) {
+              return { results: data.results };
+            },
+            cache: true,
+          },
+        }).on('select2:select', function (e) {
+          var hiddenInput = document.getElementById('id_afiliado_id_hidden');
+          if (hiddenInput) hiddenInput.value = e.params.data.id;
+        }).on('select2:clear', function () {
+          var hiddenInput = document.getElementById('id_afiliado_id_hidden');
+          if (hiddenInput) hiddenInput.value = '';
+        });
+      });
+    }
+
     // Run on initial page load
     document.addEventListener('DOMContentLoaded', function () {
       initMedicamentoSelect(document.body);
+      initAfiliadoSelect(document.body);
     });
 
     async function loadModal(url) {
@@ -698,6 +741,7 @@
       modalElement.addEventListener('shown.bs.modal', function onShown() {
         modalElement.removeEventListener('shown.bs.modal', onShown);
         initMedicamentoSelect(modalBody);
+        initAfiliadoSelect(modalBody);
       });
       modal.show();
     }
@@ -764,6 +808,7 @@
       modalBody.innerHTML = text;
       // Re-initialize Select2 after form error re-render
       initMedicamentoSelect(modalBody);
+      initAfiliadoSelect(modalBody);
     });
 
     document.addEventListener('shown.bs.modal', () => {
