@@ -46,23 +46,66 @@
     }
 
     .navbar {
-      backdrop-filter: blur(12px);
-      background: rgba(255, 255, 255, 0.8);
-      border-bottom: 1px solid rgba(15, 118, 110, 0.12);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: rgba(255, 255, 255, 0.82);
+      border-bottom: 1px solid rgba(15, 118, 110, 0.1);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
     }
 
     .brand-badge {
-      width: 2.5rem;
-      height: 2.5rem;
-      border-radius: 0.85rem;
-      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: 0.75rem;
+      background: linear-gradient(135deg, var(--brand), #0d9488, var(--brand-dark));
       color: white;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      box-shadow: 0 12px 30px rgba(15, 118, 110, 0.22);
+      font-weight: 800;
+      font-size: 1rem;
+      letter-spacing: 0.05em;
+      box-shadow: 0 8px 22px -4px rgba(15, 118, 110, 0.35);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .brand-badge::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+      pointer-events: none;
+      border-radius: inherit;
+    }
+
+    .navbar-brand:hover .brand-badge {
+      transform: scale(1.06) rotate(-2deg);
+      box-shadow: 0 12px 28px -4px rgba(15, 118, 110, 0.45);
+    }
+
+    .brand-title {
+      font-size: 1.05rem;
+      letter-spacing: -0.3px;
+      transition: color 0.2s ease;
+    }
+
+    .navbar-brand small {
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--muted) !important;
+      display: block;
+      letter-spacing: 0.02em;
+      margin-top: 1px;
+    }
+
+    .navbar-brand small::before {
+      content: '◆';
+      margin-right: 5px;
+      font-size: 0.45rem;
+      color: var(--brand);
+      vertical-align: middle;
     }
 
     .app-shell {
