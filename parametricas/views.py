@@ -2,13 +2,28 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 from django.views.generic import CreateView, ListView, UpdateView
 
 from core.utils import GruposRequeridosMixin, grupos_requeridos, is_ajax_request
 
 from .forms import MedicamentoForm
 from .models import Medicamento
+
+
+def _serializar_medicamento(m):
+    return {
+        "id": m.pk,
+        "cum": m.cum,
+        "nombre_generico": m.nombre_generico,
+        "titular_registro": m.titular_registro,
+        "concentracion": m.concentracion,
+        "activo": m.activo,
+        "activo_label": "Activo" if m.activo else "Inactivo",
+        "activo_badge_class": "text-bg-success" if m.activo else "text-bg-secondary",
+        "editar_url": reverse("parametricas:editar_modal", args=[m.pk]),
+        "eliminar_url": reverse("parametricas:eliminar", args=[m.pk]),
+    }
 
 
 class AjaxModelFormMixin:
@@ -52,22 +67,15 @@ class MedicamentoListView(GruposRequeridosMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         medicamentos = list(context["medicamentos"])
-        context["medicamentos_data"] = [
-            {
-                "id": m.pk,
-                "cum": m.cum,
-                "nombre_generico": m.nombre_generico,
-                "titular_registro": m.titular_registro,
-                "concentracion": m.concentracion,
-                "activo": m.activo,
-                "activo_label": "Activo" if m.activo else "Inactivo",
-                "activo_badge_class": "text-bg-success" if m.activo else "text-bg-secondary",
-                "editar_url": reverse("parametricas:editar_modal", args=[m.pk]),
-                "eliminar_url": reverse("parametricas:eliminar", args=[m.pk]),
-            }
-            for m in medicamentos
-        ]
+        context["medicamentos_data"] = [_serializar_medicamento(m) for m in medicamentos]
         return context
+
+
+@grupos_requeridos("Digitador",)
+@require_GET
+def medicamentos_json(request):
+    medicamentos = Medicamento.objects.all().order_by("nombre_generico", "cum")
+    return JsonResponse({"data": [_serializar_medicamento(m) for m in medicamentos]})
 
 
 class MedicamentoCreateView(GruposRequeridosMixin, AjaxModelFormMixin, CreateView):

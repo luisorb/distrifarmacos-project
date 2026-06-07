@@ -6,11 +6,11 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
   <div>
     <h1 class="h3 mb-1">Medicamentos</h1>
-    <p class="text-muted mb-0">Catálogo activo y buscable del maestro de medicamentos.</p>
+    <p class="text-muted mb-0">Catálogo activo y gestionable de medicamentos.</p>
   </div>
   <div class="d-flex gap-2">
     <a class="btn btn-brand" data-modal-url="{% url 'parametricas:crear_modal' %}" href="#">
-      <i class="bi bi-plus-lg"></i> Nuevo medicamento
+      <i class="bi bi-plus-lg"></i> Nuevo elemento
     </a>
   </div>
 </div>
@@ -118,7 +118,7 @@
   } from 'https://esm.sh/@tanstack/table-core@8.21.3?bundle';
 
   const root           = document.getElementById('medicamentosTableApp');
-  const data           = JSON.parse(document.getElementById('medicamentos-data').textContent);
+  let data             = JSON.parse(document.getElementById('medicamentos-data').textContent);
   const searchInput    = document.getElementById('medicamentosSearch');
   const estadoFiltro   = document.getElementById('medicamentosEstadoFiltro');
   const pageSizeSelect = document.getElementById('medicamentosPageSize');
@@ -343,6 +343,16 @@
       ).show();
     }
   });
+
+  window.refreshCurrentTable = async function () {
+    try {
+      var resp = await fetch('{% url "parametricas:datos_json" %}');
+      var json = await resp.json();
+      data = json.data;
+      state.pagination = { ...state.pagination, pageIndex: 0 };
+      render();
+    } catch (_) {}
+  };
 
   searchInput.addEventListener('input', (e) => table.setGlobalFilter(e.target.value.trim()));
   estadoFiltro.addEventListener('change', (e) => table.getColumn('activo').setFilterValue(e.target.value));

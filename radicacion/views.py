@@ -16,6 +16,44 @@ from .forms import AfiliadoForm, FormulaBaseForm, SoporteForm, TecnologiaForm
 from .models import Afiliado, FormulaBase, FormulaBaseTecnologia, SoporteFormulaBase
 
 
+def _serializar_afiliado(a):
+    return {
+        "id": a.pk,
+        "numero_documento": a.numero_documento,
+        "nombres": a.nombres,
+        "apellidos": a.apellidos,
+        "tipo_documento": a.tipo_documento,
+        "tipo_documento_label": a.get_tipo_documento_display(),
+        "activo": a.activo,
+        "activo_label": "Activo" if a.activo else "Inactivo",
+        "activo_badge_class": "text-bg-success" if a.activo else "text-bg-secondary",
+        "full_name": f"{a.nombres} {a.apellidos}",
+        "edit_url": reverse("radicacion:editar_modal", args=[a.pk]),
+        "radicar_url": f"{reverse('radicacion:radicar')}?afiliado={a.pk}",
+        "delete_url": reverse("radicacion:eliminar", args=[a.pk]),
+    }
+
+
+def _serializar_formula(f):
+    return {
+        "id": f.pk,
+        "codigo_formula": f.codigo_formula,
+        "afiliado": str(f.afiliado),
+        "afiliado_documento": f.afiliado.numero_documento,
+        "medico": f.medico or "",
+        "institucion": f.institucion,
+        "fecha_formula": f.fecha_formula.strftime("%Y-%m-%d"),
+        "fecha_formula_display": f.fecha_formula.strftime("%d/%m/%Y"),
+        "activo": f.activo,
+        "activo_label": "Activo" if f.activo else "Inactivo",
+        "activo_badge_class": "text-bg-success" if f.activo else "text-bg-secondary",
+        "detalle_url": reverse("formula:detalle", args=[f.pk]),
+        "editar_url": reverse("formula:editar_modal", args=[f.pk]),
+        "eliminar_url": reverse("formula:eliminar", args=[f.pk]),
+        "delete_name": f"{f.codigo_formula} — {f.afiliado}",
+    }
+
+
 class AjaxModelFormMixin:
     ajax_template_name = None
     success_message = ""
@@ -57,25 +95,15 @@ class AfiliadoListView(GruposRequeridosMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         afiliados = list(context["afiliados"])
-        context["afiliados_data"] = [
-            {
-                "id": afiliado.pk,
-                "numero_documento": afiliado.numero_documento,
-                "nombres": afiliado.nombres,
-                "apellidos": afiliado.apellidos,
-                "tipo_documento": afiliado.tipo_documento,
-                "tipo_documento_label": afiliado.get_tipo_documento_display(),
-                "activo": afiliado.activo,
-                "activo_label": "Activo" if afiliado.activo else "Inactivo",
-                "activo_badge_class": "text-bg-success" if afiliado.activo else "text-bg-secondary",
-                "full_name": f"{afiliado.nombres} {afiliado.apellidos}",
-                "edit_url": reverse("radicacion:editar_modal", args=[afiliado.pk]),
-                "radicar_url": f"{reverse('radicacion:radicar')}?afiliado={afiliado.pk}",
-                "delete_url": reverse("radicacion:eliminar", args=[afiliado.pk]),
-            }
-            for afiliado in afiliados
-        ]
+        context["afiliados_data"] = [_serializar_afiliado(a) for a in afiliados]
         return context
+
+
+@grupos_requeridos("Digitador",)
+@require_GET
+def afiliados_json(request):
+    afiliados = Afiliado.objects.all().order_by("apellidos", "nombres")
+    return JsonResponse({"data": [_serializar_afiliado(a) for a in afiliados]})
 
 
 class AfiliadoCreateView(GruposRequeridosMixin, AjaxModelFormMixin, CreateView):
@@ -208,27 +236,15 @@ class FormulaListView(GruposRequeridosMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         formulas = list(context["formulas"])
-        context["formulas_data"] = [
-            {
-                "id": formula.pk,
-                "codigo_formula": formula.codigo_formula,
-                "afiliado": str(formula.afiliado),
-                "afiliado_documento": formula.afiliado.numero_documento,
-                "medico": formula.medico or "",
-                "institucion": formula.institucion,
-                "fecha_formula": formula.fecha_formula.strftime("%Y-%m-%d"),
-                "fecha_formula_display": formula.fecha_formula.strftime("%d/%m/%Y"),
-                "activo": formula.activo,
-                "activo_label": "Activo" if formula.activo else "Inactivo",
-                "activo_badge_class": "text-bg-success" if formula.activo else "text-bg-secondary",
-                "detalle_url": reverse("formula:detalle", args=[formula.pk]),
-                "editar_url": reverse("formula:editar_modal", args=[formula.pk]),
-                "eliminar_url": reverse("formula:eliminar", args=[formula.pk]),
-                "delete_name": f"{formula.codigo_formula} — {formula.afiliado}",
-            }
-            for formula in formulas
-        ]
+        context["formulas_data"] = [_serializar_formula(f) for f in formulas]
         return context
+
+
+@grupos_requeridos("Digitador",)
+@require_GET
+def formulas_json(request):
+    formulas = FormulaBase.objects.select_related("afiliado").all().order_by("-fecha_creacion")
+    return JsonResponse({"data": [_serializar_formula(f) for f in formulas]})
 
 
 class FormulaCreateView(GruposRequeridosMixin, AjaxModelFormMixin, CreateView):

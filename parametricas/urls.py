@@ -19,4 +19,5 @@ urlpatterns = [
         name="editar_modal",
     ),
     path("<int:pk>/eliminar/", views.medicamento_eliminar, name="eliminar"),
+    path("datos/", views.medicamentos_json, name="datos_json"),
 ]

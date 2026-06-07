@@ -20,4 +20,5 @@ urlpatterns = [
     path("radicar/", views.radicar_formula, name="radicar"),
     path("api/medicamentos/", views.buscar_medicamento, name="api_medicamentos"),
     path("api/afiliados/", views.buscar_afiliado, name="api_afiliados"),
+    path("datos/", views.formulas_json, name="datos_json"),
 ]

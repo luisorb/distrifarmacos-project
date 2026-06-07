@@ -118,7 +118,7 @@
   } from 'https://esm.sh/@tanstack/table-core@8.21.3?bundle';
 
   const root        = document.getElementById('formulasTableApp');
-  const data        = JSON.parse(document.getElementById('formulas-data').textContent);
+  let data        = JSON.parse(document.getElementById('formulas-data').textContent);
   const searchInput = document.getElementById('formulasSearch');
   const estadoFiltro = document.getElementById('formulasEstadoFiltro');
   const pageSizeSelect = document.getElementById('formulasPageSize');
@@ -341,6 +341,16 @@
   searchInput.addEventListener('input', (e) => table.setGlobalFilter(e.target.value.trim()));
   estadoFiltro.addEventListener('change', (e) => table.getColumn('activo').setFilterValue(e.target.value));
   pageSizeSelect.addEventListener('change', (e) => table.setPageSize(Number(e.target.value)));
+
+  window.refreshCurrentTable = async function () {
+    try {
+      var resp = await fetch('{% url "formula:datos_json" %}');
+      var json = await resp.json();
+      data = json.data;
+      state.pagination = { ...state.pagination, pageIndex: 0 };
+      render();
+    } catch (_) {}
+  };
 
   render();
 </script>

@@ -18,4 +18,5 @@ urlpatterns = [
     ),
     path("<int:pk>/eliminar/", views.afiliado_eliminar, name="eliminar"),
     path("radicar/", views.radicar_formula, name="radicar"),
+    path("datos/", views.afiliados_json, name="datos_json"),
 ]

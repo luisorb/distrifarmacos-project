@@ -6,7 +6,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
   <div>
     <h1 class="h3 mb-1">Afiliados</h1>
-    <p class="text-muted mb-0">Gestión de personas afiliadas y acceso al flujo de radicación.</p>
+    <p class="text-muted mb-0">Gestión de personas afiliadas</p>
   </div>
   <div class="d-flex gap-2">
     <a class="btn btn-brand" data-modal-url="{% url 'radicacion:crear_modal' %}" href="#">+ Añadir afiliado</a>
@@ -140,7 +140,7 @@
   } from 'https://esm.sh/@tanstack/table-core@8.21.3?bundle';
 
   const root = document.getElementById('afiliadosTableApp');
-  const data = JSON.parse(document.getElementById('afiliados-data').textContent);
+  let data = JSON.parse(document.getElementById('afiliados-data').textContent);
   const searchInput = document.getElementById('afiliadosSearch');
   const tipoFiltro = document.getElementById('afiliadosTipoFiltro');
   const estadoFiltro = document.getElementById('afiliadosEstadoFiltro');
@@ -433,6 +433,16 @@
   pageSizeSelect.addEventListener('change', (event) => {
     table.setPageSize(Number(event.target.value));
   });
+
+  window.refreshCurrentTable = async function () {
+    try {
+      var resp = await fetch('{% url "radicacion:datos_json" %}');
+      var json = await resp.json();
+      data = json.data;
+      state.pagination = { ...state.pagination, pageIndex: 0 };
+      render();
+    } catch (_) {}
+  };
 
   render();
 </script>
