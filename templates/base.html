@@ -17,8 +17,8 @@
     rel="stylesheet">
   <style>
     :root {
-      --brand: #0f766e;
-      --brand-dark: #134e4a;
+      --brand: #2f76fa;
+      --brand-dark: #105ed3;
       --accent: #f97316;
       --bg: #f4f7f8;
       --surface: #ffffff;
@@ -31,7 +31,7 @@
       font-family: "IBM Plex Sans", sans-serif;
       color: var(--text);
       background:
-        radial-gradient(circle at top left, rgba(15, 118, 110, 0.08), transparent 30%),
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 30%),
         radial-gradient(circle at top right, rgba(249, 115, 22, 0.08), transparent 26%),
         linear-gradient(180deg, #f8fbfc 0%, var(--bg) 100%);
       min-height: 100vh;
@@ -55,7 +55,7 @@
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       background: rgba(255, 255, 255, 0.82);
-      border-bottom: 1px solid rgba(15, 118, 110, 0.1);
+      border-bottom: 1px solid rgba(37, 99, 235, 0.1);
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
     }
 
@@ -63,7 +63,7 @@
       width: 2.75rem;
       height: 2.75rem;
       border-radius: 0.75rem;
-      background: linear-gradient(135deg, var(--brand), #0d9488, var(--brand-dark));
+      background: linear-gradient(135deg, var(--brand), #3b82f6, var(--brand-dark));
       color: white;
       display: inline-flex;
       align-items: center;
@@ -71,7 +71,7 @@
       font-weight: 800;
       font-size: 1rem;
       letter-spacing: 0.05em;
-      box-shadow: 0 8px 22px -4px rgba(15, 118, 110, 0.35);
+      box-shadow: 0 8px 22px -4px rgba(37, 99, 235, 0.35);
       position: relative;
       overflow: hidden;
       transition: transform 0.25s ease, box-shadow 0.25s ease;
@@ -88,7 +88,7 @@
 
     .navbar-brand:hover .brand-badge {
       transform: scale(1.06) rotate(-2deg);
-      box-shadow: 0 12px 28px -4px rgba(15, 118, 110, 0.45);
+      box-shadow: 0 12px 28px -4px rgba(37, 99, 235, 0.45);
     }
 
     .brand-title {
@@ -120,8 +120,7 @@
     }
 
     .app-card,
-    .table-card,
-    .login-card {
+    .table-card {
       background: rgba(255, 255, 255, 0.94);
       border: 1px solid rgba(216, 226, 232, 0.85);
       border-radius: 8px;
@@ -181,7 +180,7 @@
       background: linear-gradient(135deg, var(--brand), var(--brand-dark));
       color: white;
       border: none;
-      box-shadow: 0 12px 24px rgba(15, 118, 110, 0.18);
+      box-shadow: 0 12px 24px rgba(37, 99, 235, 0.18);
     }
 
     .btn-brand:hover {
@@ -213,7 +212,7 @@
     }
 
     .table thead th {
-      border-bottom-color: rgba(15, 118, 110, 0.12);
+      border-bottom-color: rgba(37, 99, 235, 0.12);
       color: var(--muted);
       font-size: 0.85rem;
       text-transform: uppercase;
@@ -229,14 +228,14 @@
 
     .form-control:focus,
     .form-select:focus {
-      border-color: rgba(15, 118, 110, 0.5);
-      box-shadow: 0 0 0 0.2rem rgba(15, 118, 110, 0.12);
+      border-color: rgba(37, 99, 235, 0.5);
+      box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.12);
     }
 
     .hero {
       padding: 2rem;
       border-radius: 1.5rem;
-      background: linear-gradient(135deg, rgba(15, 118, 110, 0.95), rgba(19, 78, 74, 0.95));
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.95), rgba(30, 58, 138, 0.95));
       color: #e8f8f7;
       overflow: hidden;
       position: relative;
@@ -289,7 +288,7 @@
 
     .wizard-step.done .wizard-step-dot {
       border-color: var(--brand);
-      background: rgba(15, 118, 110, 0.12);
+      background: rgba(37, 99, 235, 0.12);
       color: var(--brand);
     }
 
@@ -340,7 +339,7 @@
     .dropzone-area:focus,
     .dropzone-area.drag-over {
       border-color: var(--brand);
-      background: rgba(15, 118, 110, 0.04);
+      background: rgba(37, 99, 235, 0.04);
     }
 
     .dropzone-input {
@@ -469,7 +468,7 @@
     }
 
     .soporte-card:hover .soporte-thumb {
-      box-shadow: 0 4px 16px rgba(15, 118, 110, 0.15);
+      box-shadow: 0 4px 16px rgba(37, 99, 235, 0.15);
     }
 
     .soporte-thumb-pdf {
@@ -533,15 +532,15 @@
           border-radius: 50%;
         }
         /* Icon background by type */
-        .toast-container .toast.text-bg-success .toast-body .bi { background: rgba(46, 204, 113, 0.2); }
+        .toast-container .toast.text-bg-success .toast-body .bi { background: rgba(59, 130, 246, 0.2); }
         .toast-container .toast.text-bg-danger  .toast-body .bi { background: rgba(231, 76, 60, 0.25); }
         .toast-container .toast.text-bg-warning .toast-body .bi { background: rgba(243, 156, 18, 0.2); }
-        .toast-container .toast.text-bg-info    .toast-body .bi { background: rgba(52, 152, 219, 0.2); }
+        .toast-container .toast.text-bg-info    .toast-body .bi { background: rgba(37, 99, 235, 0.2); }
         /* Gradient backgrounds per type */
-        .toast-container .toast.text-bg-success { background: linear-gradient(135deg, #1a7a3a 0%, #28a860 100%); }
+        .toast-container .toast.text-bg-success { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); }
         .toast-container .toast.text-bg-danger  { background: linear-gradient(135deg, #8b1e1e 0%, #c0392b 100%); }
         .toast-container .toast.text-bg-warning { background: linear-gradient(135deg, #8a6d0b 0%, #d4a017 100%); }
-        .toast-container .toast.text-bg-info    { background: linear-gradient(135deg, #1a5276 0%, #2980b9 100%); }
+        .toast-container .toast.text-bg-info    { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); }
         /* Close button */
         .toast-container .toast .btn-close {
           opacity: 0.5;
@@ -646,22 +645,22 @@
         }
 
         .user-greeting:hover {
-          background: rgba(15, 118, 110, 0.08);
+          background: rgba(37, 99, 235, 0.08);
         }
 
         /* Punto verde de estado */
         .user-dot {
           width: 10px;
           height: 10px;
-          background: #10b981;
+          background: #3b82f6;
           border-radius: 50%;
-          box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
           transition: all 0.25s ease;
         }
 
         .user-greeting:hover .user-dot {
-          box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.3);
-          background: #059669;
+          box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
+          background: #2563eb;
         }
 
         /* Icono de usuario */
@@ -672,7 +671,7 @@
         }
 
         .user-greeting:hover .user-icon {
-          color: #0f766e;
+          color: #2563eb;
         }
 
         /* Nombre de usuario */
@@ -684,7 +683,7 @@
         }
 
         .user-greeting:hover .user-name {
-          color: #0f766e;
+          color: #2563eb;
         }
 
         /* Divisor entre usuario y logout */
@@ -772,7 +771,6 @@
         /* Footer */
         .app-footer {
           padding: 1.5rem 0 2.5rem;
-          margin-top: 2rem;
         }
 
         .footer-divider {
