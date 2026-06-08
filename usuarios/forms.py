@@ -39,7 +39,21 @@ class UsuarioForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if self.instance.pk:
             self.fields["password"].help_text = "Dejar en blanco para mantener la contraseña actual."
+            self.fields["password"].required = False
+            self.fields["confirm_password"].required = False
             self.fields["username"].disabled = True
+        else:
+            self.fields["password"].required = True
+            self.fields["confirm_password"].required = True
+            self.fields["password"].help_text = ""
+
+        for field_name, field in self.fields.items():
+            if field_name == "is_active":
+                continue
+            if field_name in ("first_name", "last_name", "email"):
+                field.required = True
+            if field.required:
+                field.widget.attrs["data-req"] = "true"
 
     def clean(self):
         cleaned_data = super().clean()

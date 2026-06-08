@@ -6,7 +6,7 @@
 		<p class="text-muted mb-0">Datos del usuario del sistema</p>
 	</div>
 
-	<form method="post" action="{{ action|default:request.path }}" data-ajax-form="true">
+	<form method="post" action="{{ action|default:request.path }}" data-ajax-form="true" novalidate>
 		{% csrf_token %}
 		{{ form.non_field_errors }}
 
@@ -14,27 +14,27 @@
 			<div class="col-md-6">
 				<label class="form-label" for="{{ form.first_name.id_for_label }}">Nombres</label>
 				{{ form.first_name }}
-				{{ form.first_name.errors }}
+				<div class="field-errors" data-field="first_name" style="min-height:1.5rem;font-size:.8rem;color:#dc3545;">{{ form.first_name.errors }}</div>
 			</div>
 			<div class="col-md-6">
 				<label class="form-label" for="{{ form.last_name.id_for_label }}">Apellidos</label>
 				{{ form.last_name }}
-				{{ form.last_name.errors }}
+				<div class="field-errors" data-field="last_name" style="min-height:1.5rem;font-size:.8rem;color:#dc3545;">{{ form.last_name.errors }}</div>
 			</div>
 			<div class="col-md-6">
 				<label class="form-label" for="{{ form.username.id_for_label }}">Usuario</label>
 				{{ form.username }}
-				{{ form.username.errors }}
+				<div class="field-errors" data-field="username" style="min-height:1.5rem;font-size:.8rem;color:#dc3545;">{{ form.username.errors }}</div>
 			</div>
 			<div class="col-md-6">
 				<label class="form-label" for="{{ form.email.id_for_label }}">Correo electrónico</label>
 				{{ form.email }}
-				{{ form.email.errors }}
+				<div class="field-errors" data-field="email" style="min-height:1.5rem;font-size:.8rem;color:#dc3545;">{{ form.email.errors }}</div>
 			</div>
 			<div class="col-md-6">
 				<label class="form-label" for="{{ form.password.id_for_label }}">Contraseña</label>
 				{{ form.password }}
-				{{ form.password.errors }}
+				<div class="field-errors" data-field="password" style="min-height:1.5rem;font-size:.8rem;color:#dc3545;">{{ form.password.errors }}</div>
 				{% if form.password.help_text %}
 				<div class="form-text">{{ form.password.help_text }}</div>
 				{% endif %}
@@ -42,7 +42,7 @@
 			<div class="col-md-6">
 				<label class="form-label" for="{{ form.confirm_password.id_for_label }}">Confirmar contraseña</label>
 				{{ form.confirm_password }}
-				{{ form.confirm_password.errors }}
+				<div class="field-errors" data-field="confirm_password" style="min-height:1.5rem;font-size:.8rem;color:#dc3545;">{{ form.confirm_password.errors }}</div>
 			</div>
 			<div class="col-md-6 d-flex align-items-end">
 				<div class="form-check mb-3">
@@ -59,3 +59,48 @@
 		</div>
 	</form>
 </div>
+
+<script>
+(function() {
+	var frm = document.querySelector('form[data-ajax-form]');
+	if (!frm) return;
+
+	var errorFields = frm.querySelectorAll('.field-errors');
+
+	function limpiarErrores() {
+		errorFields.forEach(function(el) { el.textContent = ''; });
+		frm.querySelectorAll('.is-invalid').forEach(function(el) { el.classList.remove('is-invalid'); });
+	}
+
+	function validar() {
+		limpiarErrores();
+		var ok = true;
+		frm.querySelectorAll('[data-req="true"]').forEach(function(field) {
+			if (!field.value || field.value.trim() === '') {
+				var errDiv = frm.querySelector('.field-errors[data-field="' + field.name + '"]');
+				if (errDiv) errDiv.textContent = 'Este campo es obligatorio.';
+				field.classList.add('is-invalid');
+				ok = false;
+			}
+		});
+		return ok;
+	}
+
+	frm.addEventListener('submit', function(e) {
+		if (!validar()) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
+	});
+
+	frm.querySelectorAll('[data-req="true"]').forEach(function(field) {
+		field.addEventListener('input', function() {
+			var errDiv = frm.querySelector('.field-errors[data-field="' + field.name + '"]');
+			if (errDiv && errDiv.textContent && field.value && field.value.trim() !== '') {
+				errDiv.textContent = '';
+				field.classList.remove('is-invalid');
+			}
+		});
+	});
+})();
+</script>
